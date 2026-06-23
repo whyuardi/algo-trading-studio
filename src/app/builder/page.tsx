@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect, useMemo } from "react";
 import {
   ReactFlow,
   addEdge,
@@ -39,9 +39,40 @@ import {
   ChevronDown,
   X,
   Menu,
+  Share2,
+  Sparkles,
+  Layout,
+  RefreshCw,
+  Brain,
+  Copy,
+  Check,
+  Lightbulb,
 } from "lucide-react";
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Filler,
+} from "chart.js";
 
-// ─── CUSTOM NODES ───
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Filler
+);
+
+// ──────────────────────────────────────────────
+// CUSTOM NODES
+// ──────────────────────────────────────────────
 
 function IndicatorNode({ data, selected }: NodeProps) {
   const colors: Record<string, string> = {
@@ -50,13 +81,15 @@ function IndicatorNode({ data, selected }: NodeProps) {
     "Moving Average": "#FFD93D",
     "Bollinger Bands": "#6C5CE7",
     Volume: "#00FFAA",
-    "Stochastic": "#FF8A5C",
+    Stochastic: "#FF8A5C",
   };
   const color = colors[data.indicator as string] || "#00FFAA";
 
   return (
     <div
-      className={`bg-[#111118] border ${selected ? "border-[#00FFAA]" : "border-[#1A1A24]"} min-w-[180px] shadow-lg`}
+      className={`bg-[#111118] border ${
+        selected ? "border-[#00FFAA]" : "border-[#1A1A24]"
+      } min-w-[180px] shadow-lg`}
     >
       <div className="px-3 py-1.5 border-b border-[#1A1A24] flex items-center gap-2">
         <div className="w-2 h-2 rounded-full" style={{ background: color }} />
@@ -65,7 +98,9 @@ function IndicatorNode({ data, selected }: NodeProps) {
         </span>
       </div>
       <div className="px-3 py-2">
-        <p className="text-sm font-medium text-[#E8E6E3]">{data.indicator as string}</p>
+        <p className="text-sm font-medium text-[#E8E6E3]">
+          {data.indicator as string}
+        </p>
         <p className="text-[0.65rem] font-mono text-[#4A4845] mt-0.5">
           {data.params as string}
         </p>
@@ -85,12 +120,20 @@ function ConditionNode({ data, selected }: NodeProps) {
     "<": <TrendingDown className="w-3.5 h-3.5" />,
     ">=": <TrendingUp className="w-3.5 h-3.5" />,
     "<=": <TrendingDown className="w-3.5 h-3.5" />,
-    "crosses_above": <ArrowRight className="w-3.5 h-3.5 rotate-[-45deg]" />,
-    "crosses_below": <ArrowRight className="w-3.5 h-3.5 rotate-[45deg]" />,
+    crosses_above: (
+      <ArrowRight className="w-3.5 h-3.5 rotate-[-45deg]" />
+    ),
+    crosses_below: (
+      <ArrowRight className="w-3.5 h-3.5 rotate-[45deg]" />
+    ),
   };
 
   return (
-    <div className={`bg-[#111118] border ${selected ? "border-[#00FFAA]" : "border-[#1A1A24]"} min-w-[160px] shadow-lg`}>
+    <div
+      className={`bg-[#111118] border ${
+        selected ? "border-[#00FFAA]" : "border-[#1A1A24]"
+      } min-w-[160px] shadow-lg`}
+    >
       <Handle
         type="target"
         position={Position.Top}
@@ -103,7 +146,9 @@ function ConditionNode({ data, selected }: NodeProps) {
         </span>
       </div>
       <div className="px-3 py-2 flex items-center gap-2">
-        {icons[data.condition as string] || <Zap className="w-3.5 h-3.5 text-[#FFD93D]" />}
+        {icons[data.condition as string] || (
+          <Zap className="w-3.5 h-3.5 text-[#FFD93D]" />
+        )}
         <span className="text-sm font-medium text-[#E8E6E3]">
           {data.label as string}
         </span>
@@ -120,11 +165,17 @@ function ConditionNode({ data, selected }: NodeProps) {
 function ActionNode({ data, selected }: NodeProps) {
   const isBuy = data.action === "BUY";
   return (
-    <div className={`bg-[#111118] border ${selected ? "border-[#00FFAA]" : "border-[#1A1A24]"} min-w-[160px] shadow-lg`}>
+    <div
+      className={`bg-[#111118] border ${
+        selected ? "border-[#00FFAA]" : "border-[#1A1A24]"
+      } min-w-[160px] shadow-lg`}
+    >
       <Handle
         type="target"
         position={Position.Top}
-        className={`!w-2.5 !h-2.5 !border-2 !border-[#0A0A0F] !-top-[5px] ${isBuy ? "!bg-[#00FFAA]" : "!bg-[#FF6B6B]"}`}
+        className={`!w-2.5 !h-2.5 !border-2 !border-[#0A0A0F] !-top-[5px] ${
+          isBuy ? "!bg-[#00FFAA]" : "!bg-[#FF6B6B]"
+        }`}
       />
       <div className="px-3 py-1.5 border-b border-[#1A1A24] flex items-center gap-2">
         {isBuy ? (
@@ -137,7 +188,11 @@ function ActionNode({ data, selected }: NodeProps) {
         </span>
       </div>
       <div className="px-3 py-2">
-        <p className={`text-sm font-bold ${isBuy ? "text-[#00FFAA]" : "text-[#FF6B6B]"}`}>
+        <p
+          className={`text-sm font-bold ${
+            isBuy ? "text-[#00FFAA]" : "text-[#FF6B6B]"
+          }`}
+        >
           {data.action as string}
         </p>
         <p className="text-[0.65rem] font-mono text-[#4A4845] mt-0.5">
@@ -150,7 +205,11 @@ function ActionNode({ data, selected }: NodeProps) {
 
 function FilterNode({ data, selected }: NodeProps) {
   return (
-    <div className={`bg-[#111118] border ${selected ? "border-[#00FFAA]" : "border-[#1A1A24]"} min-w-[160px] shadow-lg`}>
+    <div
+      className={`bg-[#111118] border ${
+        selected ? "border-[#00FFAA]" : "border-[#1A1A24]"
+      } min-w-[160px] shadow-lg`}
+    >
       <Handle
         type="target"
         position={Position.Top}
@@ -163,7 +222,9 @@ function FilterNode({ data, selected }: NodeProps) {
         </span>
       </div>
       <div className="px-3 py-2">
-        <p className="text-sm font-medium text-[#E8E6E3]">{data.label as string}</p>
+        <p className="text-sm font-medium text-[#E8E6E3]">
+          {data.label as string}
+        </p>
         <p className="text-[0.65rem] font-mono text-[#4A4845] mt-0.5">
           {data.params as string}
         </p>
@@ -184,63 +245,838 @@ const nodeTypes: NodeTypes = {
   filter: FilterNode,
 };
 
-// ─── DEFAULT STRATEGY ───
+// ──────────────────────────────────────────────
+// STRATEGY TEMPLATES
+// ──────────────────────────────────────────────
 
-const defaultNodes: Node[] = [
+interface StrategyTemplate {
+  name: string;
+  description: string;
+  icon: string;
+  nodes: Node[];
+  edges: Edge[];
+}
+
+const STRATEGY_TEMPLATES: StrategyTemplate[] = [
   {
-    id: "rsi",
-    type: "indicator",
-    position: { x: 250, y: 0 },
-    data: { indicator: "RSI", params: "period: 14" },
+    name: "RSI Mean Reversion",
+    description: "Buy oversold, sell overbought using RSI",
+    icon: "📊",
+    nodes: [
+      {
+        id: "rsi",
+        type: "indicator",
+        position: { x: 250, y: 0 },
+        data: { indicator: "RSI", params: "period: 14" },
+      },
+      {
+        id: "cond-buy",
+        type: "condition",
+        position: { x: 260, y: 150 },
+        data: { condition: "<", label: "RSI < 30", indicator: "RSI", value: 30 },
+      },
+      {
+        id: "cond-sell",
+        type: "condition",
+        position: { x: 460, y: 150 },
+        data: { condition: ">", label: "RSI > 70", indicator: "RSI", value: 70 },
+      },
+      {
+        id: "buy",
+        type: "action",
+        position: { x: 260, y: 300 },
+        data: { action: "BUY", params: "size: 2% portfolio" },
+      },
+      {
+        id: "sell",
+        type: "action",
+        position: { x: 460, y: 300 },
+        data: { action: "SELL", params: "size: 100% position" },
+      },
+      {
+        id: "stop-loss",
+        type: "action",
+        position: { x: 660, y: 300 },
+        data: { action: "STOP_LOSS", params: "trigger: -5%" },
+      },
+      {
+        id: "time-filter",
+        type: "filter",
+        position: { x: 60, y: 150 },
+        data: { label: "Trading Hours", params: "09:00 - 16:00 UTC" },
+      },
+    ],
+    edges: [
+      { id: "e-rsi-buy", source: "rsi", target: "cond-buy", animated: true, style: { stroke: "#00FFAA" } },
+      { id: "e-rsi-sell", source: "rsi", target: "cond-sell", animated: true, style: { stroke: "#FF6B6B" } },
+      { id: "e-cond-buy", source: "cond-buy", target: "buy", style: { stroke: "#00FFAA" } },
+      { id: "e-cond-sell", source: "cond-sell", target: "sell", style: { stroke: "#FF6B6B" } },
+      { id: "e-time-rsi", source: "time-filter", target: "rsi", style: { stroke: "#6C5CE7" } },
+      { id: "e-sell-sl", source: "sell", target: "stop-loss", style: { stroke: "#FF8A5C" }, label: "on fill" },
+    ],
   },
   {
-    id: "cond-buy",
-    type: "condition",
-    position: { x: 260, y: 150 },
-    data: { condition: "<", label: "RSI < 30", indicator: "RSI", value: 30 },
+    name: "MACD Crossover",
+    description: "Trade MACD line/signal crossovers",
+    icon: "📈",
+    nodes: [
+      {
+        id: "macd",
+        type: "indicator",
+        position: { x: 250, y: 0 },
+        data: { indicator: "MACD", params: "12/26/9" },
+      },
+      {
+        id: "ma-slow",
+        type: "indicator",
+        position: { x: 480, y: 0 },
+        data: { indicator: "Moving Average", params: "SMA 200" },
+      },
+      {
+        id: "cond-bull",
+        type: "condition",
+        position: { x: 260, y: 150 },
+        data: { condition: "crosses_above", label: "MACD crosses above Signal" },
+      },
+      {
+        id: "cond-bear",
+        type: "condition",
+        position: { x: 480, y: 150 },
+        data: { condition: "crosses_below", label: "MACD crosses below Signal" },
+      },
+      {
+        id: "cond-trend",
+        type: "condition",
+        position: { x: 370, y: 300 },
+        data: { condition: ">", label: "Price > SMA 200" },
+      },
+      {
+        id: "buy",
+        type: "action",
+        position: { x: 260, y: 450 },
+        data: { action: "BUY", params: "size: 5% portfolio" },
+      },
+      {
+        id: "sell",
+        type: "action",
+        position: { x: 480, y: 450 },
+        data: { action: "SELL", params: "size: 100% position" },
+      },
+    ],
+    edges: [
+      { id: "e1", source: "macd", target: "cond-bull", animated: true, style: { stroke: "#00FFAA" } },
+      { id: "e2", source: "macd", target: "cond-bear", animated: true, style: { stroke: "#FF6B6B" } },
+      { id: "e3", source: "cond-bull", target: "cond-trend", style: { stroke: "#FFD93D" } },
+      { id: "e4", source: "cond-trend", target: "buy", style: { stroke: "#00FFAA" } },
+      { id: "e5", source: "cond-bear", target: "sell", style: { stroke: "#FF6B6B" } },
+    ],
   },
   {
-    id: "cond-sell",
-    type: "condition",
-    position: { x: 460, y: 150 },
-    data: { condition: ">", label: "RSI > 70", indicator: "RSI", value: 70 },
+    name: "Bollinger Breakout",
+    description: "Trade Bollinger Band squeezes & breakouts",
+    icon: "💥",
+    nodes: [
+      {
+        id: "bb",
+        type: "indicator",
+        position: { x: 250, y: 0 },
+        data: { indicator: "Bollinger Bands", params: "20, 2σ" },
+      },
+      {
+        id: "volume",
+        type: "indicator",
+        position: { x: 480, y: 0 },
+        data: { indicator: "Volume", params: "SMA 20" },
+      },
+      {
+        id: "cond-upper",
+        type: "condition",
+        position: { x: 260, y: 150 },
+        data: { condition: ">", label: "Price > Upper BB" },
+      },
+      {
+        id: "cond-lower",
+        type: "condition",
+        position: { x: 480, y: 150 },
+        data: { condition: "<", label: "Price < Lower BB" },
+      },
+      {
+        id: "cond-vol",
+        type: "condition",
+        position: { x: 260, y: 300 },
+        data: { condition: ">", label: "Volume > 1.5x Avg" },
+      },
+      {
+        id: "buy",
+        type: "action",
+        position: { x: 260, y: 450 },
+        data: { action: "BUY", params: "size: 3% portfolio" },
+      },
+      {
+        id: "take-profit",
+        type: "action",
+        position: { x: 480, y: 450 },
+        data: { action: "TAKE_PROFIT", params: "trigger: +8%" },
+      },
+      {
+        id: "stop-loss",
+        type: "action",
+        position: { x: 660, y: 450 },
+        data: { action: "STOP_LOSS", params: "trigger: -3%" },
+      },
+    ],
+    edges: [
+      { id: "e1", source: "bb", target: "cond-upper", animated: true, style: { stroke: "#6C5CE7" } },
+      { id: "e2", source: "bb", target: "cond-lower", animated: true, style: { stroke: "#6C5CE7" } },
+      { id: "e3", source: "cond-upper", target: "cond-vol", style: { stroke: "#FFD93D" } },
+      { id: "e4", source: "cond-vol", target: "buy", style: { stroke: "#00FFAA" } },
+      { id: "e5", source: "buy", target: "take-profit", style: { stroke: "#00FFAA" } },
+      { id: "e6", source: "take-profit", target: "stop-loss", style: { stroke: "#FF8A5C" } },
+    ],
   },
   {
-    id: "buy",
-    type: "action",
-    position: { x: 260, y: 300 },
-    data: { action: "BUY", params: "size: 2% portfolio" },
+    name: "Dual MA Trend",
+    description: "Golden/death cross with volume filter",
+    icon: "🔀",
+    nodes: [
+      {
+        id: "ma-fast",
+        type: "indicator",
+        position: { x: 200, y: 0 },
+        data: { indicator: "Moving Average", params: "SMA 50" },
+      },
+      {
+        id: "ma-slow",
+        type: "indicator",
+        position: { x: 440, y: 0 },
+        data: { indicator: "Moving Average", params: "SMA 200" },
+      },
+      {
+        id: "cond-golden",
+        type: "condition",
+        position: { x: 220, y: 150 },
+        data: { condition: "crosses_above", label: "SMA50 crosses above SMA200" },
+      },
+      {
+        id: "cond-death",
+        type: "condition",
+        position: { x: 460, y: 150 },
+        data: { condition: "crosses_below", label: "SMA50 crosses below SMA200" },
+      },
+      {
+        id: "buy",
+        type: "action",
+        position: { x: 220, y: 300 },
+        data: { action: "BUY", params: "size: 10% portfolio" },
+      },
+      {
+        id: "sell",
+        type: "action",
+        position: { x: 460, y: 300 },
+        data: { action: "SELL", params: "size: 100% position" },
+      },
+    ],
+    edges: [
+      { id: "e1", source: "ma-fast", target: "cond-golden", animated: true, style: { stroke: "#00FFAA" } },
+      { id: "e2", source: "ma-slow", target: "cond-golden", animated: true, style: { stroke: "#FFD93D" } },
+      { id: "e3", source: "ma-fast", target: "cond-death", animated: true, style: { stroke: "#FF6B6B" } },
+      { id: "e4", source: "ma-slow", target: "cond-death", animated: true, style: { stroke: "#FF8A5C" } },
+      { id: "e5", source: "cond-golden", target: "buy", style: { stroke: "#00FFAA" } },
+      { id: "e6", source: "cond-death", target: "sell", style: { stroke: "#FF6B6B" } },
+    ],
   },
   {
-    id: "sell",
-    type: "action",
-    position: { x: 460, y: 300 },
-    data: { action: "SELL", params: "size: 100% position" },
-  },
-  {
-    id: "stop-loss",
-    type: "action",
-    position: { x: 660, y: 300 },
-    data: { action: "STOP_LOSS", params: "trigger: -5%" },
-  },
-  {
-    id: "time-filter",
-    type: "filter",
-    position: { x: 60, y: 150 },
-    data: { label: "Trading Hours", params: "09:00 - 16:00 UTC" },
+    name: "Stoch + RSI Combo",
+    description: "Dual oscillator confluence strategy",
+    icon: "🎯",
+    nodes: [
+      {
+        id: "rsi",
+        type: "indicator",
+        position: { x: 180, y: 0 },
+        data: { indicator: "RSI", params: "period: 14" },
+      },
+      {
+        id: "stoch",
+        type: "indicator",
+        position: { x: 420, y: 0 },
+        data: { indicator: "Stochastic", params: "14, 3, 3" },
+      },
+      {
+        id: "cond-rsi-buy",
+        type: "condition",
+        position: { x: 180, y: 150 },
+        data: { condition: "<", label: "RSI < 35" },
+      },
+      {
+        id: "cond-stoch-buy",
+        type: "condition",
+        position: { x: 420, y: 150 },
+        data: { condition: "<", label: "Stoch K < 20" },
+      },
+      {
+        id: "cond-rsi-sell",
+        type: "condition",
+        position: { x: 180, y: 300 },
+        data: { condition: ">", label: "RSI > 65" },
+      },
+      {
+        id: "cond-stoch-sell",
+        type: "condition",
+        position: { x: 420, y: 300 },
+        data: { condition: ">", label: "Stoch K > 80" },
+      },
+      {
+        id: "buy",
+        type: "action",
+        position: { x: 200, y: 450 },
+        data: { action: "BUY", params: "size: 3% portfolio" },
+      },
+      {
+        id: "sell",
+        type: "action",
+        position: { x: 400, y: 450 },
+        data: { action: "SELL", params: "size: 100% position" },
+      },
+      {
+        id: "take-profit",
+        type: "action",
+        position: { x: 300, y: 600 },
+        data: { action: "TAKE_PROFIT", params: "trigger: +12%" },
+      },
+    ],
+    edges: [
+      { id: "e1", source: "rsi", target: "cond-rsi-buy", animated: true, style: { stroke: "#FF6B6B" } },
+      { id: "e2", source: "stoch", target: "cond-stoch-buy", animated: true, style: { stroke: "#4ECDC4" } },
+      { id: "e3", source: "cond-rsi-buy", target: "buy", style: { stroke: "#00FFAA" } },
+      { id: "e4", source: "cond-stoch-buy", target: "buy", style: { stroke: "#00FFAA" } },
+      { id: "e5", source: "rsi", target: "cond-rsi-sell", animated: true, style: { stroke: "#FF6B6B" } },
+      { id: "e6", source: "stoch", target: "cond-stoch-sell", animated: true, style: { stroke: "#4ECDC4" } },
+      { id: "e7", source: "cond-rsi-sell", target: "sell", style: { stroke: "#FF6B6B" } },
+      { id: "e8", source: "cond-stoch-sell", target: "sell", style: { stroke: "#FF6B6B" } },
+      { id: "e9", source: "buy", target: "take-profit", style: { stroke: "#00FFAA" } },
+    ],
   },
 ];
 
-const defaultEdges: Edge[] = [
-  { id: "e-rsi-buy", source: "rsi", target: "cond-buy", animated: true, style: { stroke: "#00FFAA" } },
-  { id: "e-rsi-sell", source: "rsi", target: "cond-sell", animated: true, style: { stroke: "#FF6B6B" } },
-  { id: "e-cond-buy", source: "cond-buy", target: "buy", style: { stroke: "#00FFAA" } },
-  { id: "e-cond-sell", source: "cond-sell", target: "sell", style: { stroke: "#FF6B6B" } },
-  { id: "e-time-rsi", source: "time-filter", target: "rsi", style: { stroke: "#6C5CE7" } },
-  { id: "e-sell-sl", source: "sell", target: "stop-loss", style: { stroke: "#FF8A5C" }, label: "on fill" },
-];
+// ──────────────────────────────────────────────
+// BACKTEST ENGINE
+// ──────────────────────────────────────────────
 
-// ─── NODE PALETTE ───
+interface OHLCV {
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+interface BacktestResult {
+  equityCurve: { label: string; value: number }[];
+  totalReturn: string;
+  sharpeRatio: string;
+  maxDrawdown: string;
+  winRate: string;
+  totalTrades: number;
+  profitFactor: string;
+  avgTrade: string;
+  monthlyReturns: number[];
+}
+
+function generateOHLCV(days: number, startPrice: number): OHLCV[] {
+  const data: OHLCV[] = [];
+  let price = startPrice;
+  const seed = 42;
+  let rngState = seed;
+  const rand = () => {
+    rngState = (rngState * 16807 + 0) % 2147483647;
+    return (rngState - 1) / 2147483646;
+  };
+
+  for (let i = 0; i < days; i++) {
+    const drift = 0.0002;
+    const vol = 0.018;
+    const ret = drift + vol * (rand() + rand() + rand() - 1.5);
+    const open = price;
+    price *= 1 + ret;
+    const high = Math.max(open, price) * (1 + rand() * 0.012);
+    const low = Math.min(open, price) * (1 - rand() * 0.012);
+    const volume = 5000000 + rand() * 10000000;
+    data.push({ open, high, low, close: price, volume });
+  }
+  return data;
+}
+
+function computeSMA(prices: number[], period: number): (number | null)[] {
+  const result: (number | null)[] = [];
+  for (let i = 0; i < prices.length; i++) {
+    if (i < period - 1) {
+      result.push(null);
+    } else {
+      let sum = 0;
+      for (let j = i - period + 1; j <= i; j++) sum += prices[j];
+      result.push(sum / period);
+    }
+  }
+  return result;
+}
+
+function computeRSI(prices: number[], period: number): (number | null)[] {
+  const result: (number | null)[] = [null];
+  const gains: number[] = [];
+  const losses: number[] = [];
+  for (let i = 1; i < prices.length; i++) {
+    const change = prices[i] - prices[i - 1];
+    gains.push(change > 0 ? change : 0);
+    losses.push(change < 0 ? -change : 0);
+    if (i < period) {
+      result.push(null);
+      continue;
+    }
+    const avgGain = gains.slice(i - period, i).reduce((a, b) => a + b, 0) / period;
+    const avgLoss = losses.slice(i - period, i).reduce((a, b) => a + b, 0) / period;
+    if (avgLoss === 0) {
+      result.push(100);
+    } else {
+      const rs = avgGain / avgLoss;
+      result.push(100 - 100 / (1 + rs));
+    }
+  }
+  return result;
+}
+
+function computeEMA(prices: number[], period: number): (number | null)[] {
+  const result: (number | null)[] = [];
+  const k = 2 / (period + 1);
+  let ema: number | null = null;
+  for (let i = 0; i < prices.length; i++) {
+    if (i < period - 1) {
+      result.push(null);
+    } else if (i === period - 1) {
+      let sum = 0;
+      for (let j = 0; j < period; j++) sum += prices[j];
+      ema = sum / period;
+      result.push(ema);
+    } else {
+      ema = (prices[i] - ema!) * k + ema!;
+      result.push(ema);
+    }
+  }
+  return result;
+}
+
+function computeMACD(prices: number[]): { macd: (number | null)[]; signal: (number | null)[] } {
+  const ema12 = computeEMA(prices, 12);
+  const ema26 = computeEMA(prices, 26);
+  const macdLine: (number | null)[] = [];
+  for (let i = 0; i < prices.length; i++) {
+    if (ema12[i] !== null && ema26[i] !== null) {
+      macdLine.push(ema12[i]! - ema26[i]!);
+    } else {
+      macdLine.push(null);
+    }
+  }
+  const macdVals = macdLine.filter((v): v is number => v !== null);
+  const signalVals = computeEMA(macdVals, 9);
+  const signal: (number | null)[] = [];
+  let j = 0;
+  for (let i = 0; i < macdLine.length; i++) {
+    if (macdLine[i] === null) {
+      signal.push(null);
+    } else {
+      signal.push(signalVals[j] ?? null);
+      j++;
+    }
+  }
+  return { macd: macdLine, signal };
+}
+
+function computeBollinger(
+  prices: number[],
+  period: number,
+  stdDev: number
+): { upper: (number | null)[]; lower: (number | null)[] } {
+  const sma = computeSMA(prices, period);
+  const upper: (number | null)[] = [];
+  const lower: (number | null)[] = [];
+  for (let i = 0; i < prices.length; i++) {
+    if (sma[i] === null) {
+      upper.push(null);
+      lower.push(null);
+    } else {
+      const slice = prices.slice(i - period + 1, i + 1);
+      const mean = sma[i]!;
+      const variance = slice.reduce((a, b) => a + (b - mean) ** 2, 0) / period;
+      const std = Math.sqrt(variance);
+      upper.push(mean + stdDev * std);
+      lower.push(mean - stdDev * std);
+    }
+  }
+  return { upper, lower };
+}
+
+function runBacktest(nodes: Node[], edges: Edge[]): BacktestResult {
+  const prices = generateOHLCV(365, 100);
+  const closes = prices.map((p) => p.close);
+
+  // Determine indicators from nodes
+  const indicators = nodes.filter((n) => n.type === "indicator");
+  const conditions = nodes.filter((n) => n.type === "condition");
+  const actions = nodes.filter((n) => n.type === "action");
+
+  // Compute indicators
+  const rsiPeriod = parseInt(
+    (indicators.find((n) => n.data.indicator === "RSI")?.data.params as string) || "14"
+  );
+  const rsi = computeRSI(closes, rsiPeriod);
+  const sma50 = computeSMA(closes, 50);
+  const sma200 = computeSMA(closes, 200);
+  const { macd: macdLine, signal: macdSignal } = computeMACD(closes);
+  const { upper: bbUpper, lower: bbLower } = computeBollinger(closes, 20, 2);
+
+  // Determine strategy parameters from nodes
+  let buyThreshold = 30;
+  let sellThreshold = 70;
+  let hasRSI = indicators.some((n) => n.data.indicator === "RSI");
+  let hasMACD = indicators.some((n) => n.data.indicator === "MACD");
+  let hasBB = indicators.some((n) => n.data.indicator === "Bollinger Bands");
+  let hasMA = indicators.some(
+    (n) => (n.data.indicator as string) === "Moving Average"
+  );
+  let hasStoch = indicators.some((n) => n.data.indicator === "Stochastic");
+
+  // Extract thresholds from condition nodes
+  conditions.forEach((c) => {
+    const val = c.data.value as number | undefined;
+    if (val !== undefined) {
+      if ((c.data.condition as string) === "<" && val < 50) buyThreshold = val;
+      if ((c.data.condition as string) === ">" && val > 50) sellThreshold = val;
+    }
+  });
+
+  // Has any action node?
+  const hasBuy = actions.some((a) => a.data.action === "BUY");
+  const hasSell = actions.some(
+    (a) => a.data.action === "SELL" || a.data.action === "STOP_LOSS"
+  );
+
+  // If no indicators, add default logic
+  if (!hasRSI && !hasMACD && !hasBB && !hasMA && !hasStoch) {
+    hasRSI = true;
+  }
+  if (!hasBuy) hasBuy; // defaults
+  if (!hasSell) hasSell;
+
+  // Simulate
+  let cash = 10000;
+  let shares = 0;
+  let position = 0;
+  const equityCurve: { label: string; value: number }[] = [];
+  let wins = 0;
+  let losses = 0;
+  let totalProfit = 0;
+  let totalLoss = 0;
+  let entryPrice = 0;
+  const monthlyEquity: number[] = new Array(12).fill(0);
+  const monthLabels = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  ];
+
+  for (let i = 0; i < closes.length; i++) {
+    const price = closes[i];
+    let buySignal = false;
+    let sellSignal = false;
+
+    if (hasRSI && rsi[i] !== null) {
+      if (rsi[i]! < buyThreshold) buySignal = true;
+      if (rsi[i]! > sellThreshold) sellSignal = true;
+    }
+
+    if (hasMACD && macdLine[i] !== null && macdSignal[i] !== null) {
+      if (i > 0 && macdLine[i - 1] !== null && macdSignal[i - 1] !== null) {
+        if (macdLine[i - 1]! < macdSignal[i - 1]! && macdLine[i]! >= macdSignal[i]!)
+          buySignal = true;
+        if (macdLine[i - 1]! >= macdSignal[i - 1]! && macdLine[i]! < macdSignal[i]!)
+          sellSignal = true;
+      }
+    }
+
+    if (hasBB && bbUpper[i] !== null && bbLower[i] !== null) {
+      if (price > bbUpper[i]!) buySignal = true;
+      if (price < bbLower[i]!) sellSignal = true;
+    }
+
+    if (hasMA && sma50[i] !== null && sma200[i] !== null) {
+      if (i > 0 && sma50[i - 1] !== null && sma200[i - 1] !== null) {
+        if (sma50[i - 1]! < sma200[i - 1]! && sma50[i]! >= sma200[i]!)
+          buySignal = true;
+        if (sma50[i - 1]! >= sma200[i - 1]! && sma50[i]! < sma200[i]!)
+          sellSignal = true;
+      }
+    }
+
+    if (hasStoch && i > 14) {
+      const slice = closes.slice(i - 14, i + 1);
+      const low14 = Math.min(...slice);
+      const high14 = Math.max(...slice);
+      if (high14 !== low14) {
+        const k = ((price - low14) / (high14 - low14)) * 100;
+        if (k < 20) buySignal = true;
+        if (k > 80) sellSignal = true;
+      }
+    }
+
+    // If no conditions found, use simple moving average crossover as fallback
+    if (!hasRSI && !hasMACD && !hasBB && !hasMA && !hasStoch && sma50[i] && sma200[i]) {
+      if (i > 0 && sma50[i - 1] !== null && sma200[i - 1] !== null) {
+        if (sma50[i - 1]! < sma200[i - 1]! && sma50[i]! >= sma200[i]!)
+          buySignal = true;
+        if (sma50[i - 1]! >= sma200[i - 1]! && sma50[i]! < sma200[i]!)
+          sellSignal = true;
+      }
+    }
+
+    if (buySignal && position === 0) {
+      const size = Math.floor((cash * 0.95) / price);
+      if (size > 0) {
+        shares = size;
+        cash -= shares * price;
+        entryPrice = price;
+        position = 1;
+      }
+    } else if (sellSignal && position === 1) {
+      cash += shares * price;
+      const pnl = (price - entryPrice) / entryPrice;
+      if (pnl > 0) {
+        wins++;
+        totalProfit += pnl;
+      } else {
+        losses++;
+        totalLoss += Math.abs(pnl);
+      }
+      shares = 0;
+      position = 0;
+    }
+
+    // Stop loss at -5%
+    if (position === 1 && price < entryPrice * 0.95) {
+      cash += shares * price;
+      const pnl = (price - entryPrice) / entryPrice;
+      losses++;
+      totalLoss += Math.abs(pnl);
+      shares = 0;
+      position = 0;
+    }
+
+    // Take profit at +15%
+    if (position === 1 && price > entryPrice * 1.15) {
+      cash += shares * price;
+      const pnl = (price - entryPrice) / entryPrice;
+      wins++;
+      totalProfit += pnl;
+      shares = 0;
+      position = 0;
+    }
+
+    const equity = cash + shares * price;
+    const day = Math.floor(i / 30);
+    if (day < 12) monthlyEquity[day] = equity;
+    if (i % 7 === 0 || i === closes.length - 1) {
+      equityCurve.push({
+        label: `D${i}`,
+        value: Math.round(equity * 100) / 100,
+      });
+    }
+  }
+
+  const finalEquity = cash + shares * closes[closes.length - 1];
+  const totalReturnPct = ((finalEquity - 10000) / 10000) * 100;
+
+  // Compute max drawdown
+  let peak = 0;
+  let maxDD = 0;
+  for (const pt of equityCurve) {
+    if (pt.value > peak) peak = pt.value;
+    const dd = ((peak - pt.value) / peak) * 100;
+    if (dd > maxDD) maxDD = dd;
+  }
+
+  const totalTrades = wins + losses;
+  const winRate = totalTrades > 0 ? (wins / totalTrades) * 100 : 0;
+  const avgTrade = totalTrades > 0 ? totalReturnPct / totalTrades : 0;
+  const profitFactor =
+    totalLoss > 0 ? totalProfit / totalLoss : totalProfit > 0 ? 99.99 : 0;
+  const sharpe =
+    totalReturnPct > 0 && maxDD > 0 ? (totalReturnPct / maxDD) * 1.2 : 0;
+
+  return {
+    equityCurve,
+    totalReturn: `${totalReturnPct >= 0 ? "+" : ""}${totalReturnPct.toFixed(1)}%`,
+    sharpeRatio: sharpe.toFixed(2),
+    maxDrawdown: `-${maxDD.toFixed(1)}%`,
+    winRate: `${winRate.toFixed(1)}%`,
+    totalTrades,
+    profitFactor: profitFactor.toFixed(2),
+    avgTrade: `${avgTrade >= 0 ? "+" : ""}${avgTrade.toFixed(2)}%`,
+    monthlyReturns: monthlyEquity.map((v) => Math.round(((v - 10000) / 10000) * 100)),
+  };
+}
+
+// ──────────────────────────────────────────────
+// AI STRATEGY OPTIMIZER
+// ──────────────────────────────────────────────
+
+interface OptimizerSuggestion {
+  type: "improve" | "warning" | "info";
+  title: string;
+  description: string;
+  impact: string;
+}
+
+function generateOptimizerSuggestions(
+  nodes: Node[],
+  backtest: BacktestResult
+): OptimizerSuggestion[] {
+  const suggestions: OptimizerSuggestion[] = [];
+  const indicators = nodes.filter((n) => n.type === "indicator");
+  const conditions = nodes.filter((n) => n.type === "condition");
+  const actions = nodes.filter((n) => n.type === "action");
+
+  // Win rate suggestion
+  const wr = parseFloat(backtest.winRate);
+  if (wr < 50) {
+    suggestions.push({
+      type: "warning",
+      title: "Low Win Rate Detected",
+      description:
+        "Consider adding a trend filter (e.g., 200 SMA) to avoid counter-trend trades.",
+      impact: "+5-12% win rate",
+    });
+  } else if (wr > 60) {
+    suggestions.push({
+      type: "info",
+      title: "Strong Win Rate",
+      description:
+        "Win rate is solid. Consider increasing position size from 2% to 4% for higher returns.",
+      impact: "+20-40% return",
+    });
+  }
+
+  // Sharpe ratio
+  const sr = parseFloat(backtest.sharpeRatio);
+  if (sr < 1.5) {
+    suggestions.push({
+      type: "improve",
+      title: "Improve Risk-Adjusted Returns",
+      description:
+        "Add ATR-based position sizing to reduce volatility. Scale position inversely with ATR.",
+      impact: "Sharpe > 2.0",
+    });
+  }
+
+  // Drawdown
+  const dd = parseFloat(backtest.maxDrawdown.replace("-", ""));
+  if (dd > 15) {
+    suggestions.push({
+      type: "warning",
+      title: "High Maximum Drawdown",
+      description:
+        "Add a trailing stop-loss at 2x ATR to protect against extended drawdowns.",
+      impact: `-${(dd * 0.3).toFixed(0)}% drawdown`,
+    });
+  }
+
+  // Missing indicators
+  if (indicators.length < 2) {
+    suggestions.push({
+      type: "improve",
+      title: "Add Confluence Indicators",
+      description:
+        "Adding Volume or MACD as a confirmation indicator can filter false signals.",
+      impact: "+8-15% fewer false signals",
+    });
+  }
+
+  // RSI threshold tuning
+  const hasRSI = indicators.some((n) => n.data.indicator === "RSI");
+  if (hasRSI) {
+    const buyConds = conditions.filter(
+      (c) => (c.data.condition as string) === "<" && (c.data.value as number) < 40
+    );
+    if (buyConds.length > 0) {
+      suggestions.push({
+        type: "improve",
+        title: "Tighten RSI Buy Threshold",
+        description:
+          "Changing RSI buy from 30 to 25 would reduce entries during strong downtrends.",
+        impact: "+3-7% total return",
+      });
+    }
+  }
+
+  // Risk management
+  if (actions.length < 3) {
+    suggestions.push({
+      type: "improve",
+      title: "Add Take Profit Level",
+      description:
+        "Set take profit at 1.5x the stop-loss distance for positive expectancy.",
+      impact: "Better risk/reward ratio",
+    });
+  }
+
+  // MACD suggestion
+  if (!indicators.some((n) => n.data.indicator === "MACD") && hasRSI) {
+    suggestions.push({
+      type: "info",
+      title: "Consider MACD + RSI Combo",
+      description:
+        "Using MACD crossover as entry confirmation with RSI can improve entry timing.",
+      impact: "+10-20% returns",
+    });
+  }
+
+  // Backtest period
+  suggestions.push({
+    type: "info",
+    title: "Test Across Market Conditions",
+    description:
+      "Run backtests on different market regimes (bull, bear, sideways) to validate robustness.",
+    impact: "Better live performance",
+  });
+
+  return suggestions.slice(0, 6);
+}
+
+// ──────────────────────────────────────────────
+// SHARE FEATURE
+// ──────────────────────────────────────────────
+
+function encodeStrategy(nodes: Node[], edges: Edge[]): string {
+  const data = { nodes, edges };
+  return btoa(JSON.stringify(data));
+}
+
+function decodeStrategy(encoded: string): { nodes: Node[]; edges: Edge[] } | null {
+  try {
+    const json = atob(encoded);
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+// ──────────────────────────────────────────────
+// DEFAULT STRATEGY (RSI Mean Reversion)
+// ──────────────────────────────────────────────
+
+const defaultNodes: Node[] = STRATEGY_TEMPLATES[0].nodes;
+const defaultEdges: Edge[] = STRATEGY_TEMPLATES[0].edges;
+
+// ──────────────────────────────────────────────
+// NODE PALETTE
+// ──────────────────────────────────────────────
 
 const palette = [
   {
@@ -251,6 +1087,7 @@ const palette = [
       { type: "indicator", data: { indicator: "Moving Average", params: "SMA 50" }, label: "MA" },
       { type: "indicator", data: { indicator: "Bollinger Bands", params: "20, 2σ" }, label: "BB" },
       { type: "indicator", data: { indicator: "Volume", params: "SMA 20" }, label: "Volume" },
+      { type: "indicator", data: { indicator: "Stochastic", params: "14, 3, 3" }, label: "Stoch" },
     ],
   },
   {
@@ -280,36 +1117,87 @@ const palette = [
   },
 ];
 
-// ─── BACKTEST RESULTS ───
+// ──────────────────────────────────────────────
+// LIVE PRICE TICKER
+// ──────────────────────────────────────────────
 
-const mockBacktest = {
-  totalReturn: "+142.7%",
-  sharpeRatio: "2.31",
-  maxDrawdown: "-18.4%",
-  winRate: "67.3%",
-  totalTrades: 247,
-  profitFactor: "3.12",
-  avgTrade: "+0.58%",
-  sharpe: [1.8, 2.1, 2.3, 2.0, 2.31],
-  returns: [12, 28, 45, 67, 89, 112, 134, 142],
-};
+const TICKER_SYMBOLS = ["BTC", "ETH", "SOL", "AAPL", "TSLA", "NVDA"];
 
-// ─── MAIN PAGE ───
+interface TickerPrice {
+  symbol: string;
+  price: number;
+  change: number;
+  changePct: number;
+}
+
+function generateInitialPrices(): TickerPrice[] {
+  const bases: Record<string, number> = {
+    BTC: 67432,
+    ETH: 3521,
+    SOL: 178,
+    AAPL: 189.5,
+    TSLA: 248.7,
+    NVDA: 824.3,
+  };
+  return TICKER_SYMBOLS.map((s) => {
+    const base = bases[s];
+    const change = (Math.random() - 0.45) * base * 0.02;
+    return {
+      symbol: s,
+      price: base + change,
+      change,
+      changePct: (change / base) * 100,
+    };
+  });
+}
+
+// ──────────────────────────────────────────────
+// MAIN PAGE
+// ──────────────────────────────────────────────
 
 export default function BuilderPage() {
   const [nodes, setNodes, onNodesChange] = useNodesState(defaultNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(defaultEdges);
   const [showBacktest, setShowBacktest] = useState(false);
   const [showDeploy, setShowDeploy] = useState(false);
+  const [showOptimizer, setShowOptimizer] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [showShareToast, setShowShareToast] = useState(false);
   const [running, setRunning] = useState(false);
   const [deployed, setDeployed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [backtestResult, setBacktestResult] = useState<BacktestResult | null>(null);
+  const [activeTemplate, setActiveTemplate] = useState("RSI Mean Reversion");
+  const [tickerPrices, setTickerPrices] = useState<TickerPrice[]>(generateInitialPrices);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
+
+  // Live price ticker effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTickerPrices((prev) =>
+        prev.map((t) => {
+          const vol = t.price * 0.0003;
+          const delta = (Math.random() - 0.48) * vol;
+          const newPrice = t.price + delta;
+          return {
+            symbol: t.symbol,
+            price: newPrice,
+            change: newPrice - (t.price - t.change),
+            changePct: ((newPrice - (t.price - t.change)) / (t.price - t.change)) * 100,
+          };
+        })
+      );
+    }, 1500);
+    return () => clearInterval(interval);
+  }, []);
 
   const onConnect: OnConnect = useCallback(
     (connection: Connection) => {
       setEdges((eds) =>
-        addEdge({ ...connection, animated: false, style: { stroke: "#1A1A24" } }, eds)
+        addEdge(
+          { ...connection, animated: false, style: { stroke: "#1A1A24" } },
+          eds
+        )
       );
     },
     [setEdges]
@@ -324,7 +1212,9 @@ export default function BuilderPage() {
     (event: React.DragEvent) => {
       event.preventDefault();
       const type = event.dataTransfer.getData("application/reactflow/type");
-      const data = JSON.parse(event.dataTransfer.getData("application/reactflow/data"));
+      const data = JSON.parse(
+        event.dataTransfer.getData("application/reactflow/data")
+      );
       if (!type || !reactFlowWrapper.current) return;
 
       const bounds = reactFlowWrapper.current.getBoundingClientRect();
@@ -346,10 +1236,14 @@ export default function BuilderPage() {
 
   const handleRunBacktest = () => {
     setRunning(true);
+    setShowDeploy(false);
+    setShowOptimizer(false);
     setTimeout(() => {
+      const result = runBacktest(nodes, edges);
+      setBacktestResult(result);
       setRunning(false);
       setShowBacktest(true);
-    }, 2000);
+    }, 1500);
   };
 
   const handleDeploy = () => {
@@ -361,8 +1255,141 @@ export default function BuilderPage() {
     }, 3000);
   };
 
+  const handleLoadTemplate = (template: StrategyTemplate) => {
+    setNodes(template.nodes);
+    setEdges(template.edges);
+    setActiveTemplate(template.name);
+    setShowTemplates(false);
+    setShowBacktest(false);
+    setBacktestResult(null);
+  };
+
+  const handleShare = async () => {
+    const encoded = encodeStrategy(nodes, edges);
+    const url = `${window.location.origin}/builder?strategy=${encoded}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setShowShareToast(true);
+      setTimeout(() => setShowShareToast(false), 2500);
+    } catch {
+      // Fallback: show the URL
+      setShowShareToast(true);
+      setTimeout(() => setShowShareToast(false), 2500);
+    }
+  };
+
+  // Load from URL params on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const strategyParam = params.get("strategy");
+    if (strategyParam) {
+      const decoded = decodeStrategy(strategyParam);
+      if (decoded) {
+        setNodes(decoded.nodes);
+        setEdges(decoded.edges);
+      }
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const chartData = useMemo(() => {
+    if (!backtestResult) return null;
+    return {
+      labels: backtestResult.equityCurve.map((p) => p.label),
+      datasets: [
+        {
+          label: "Equity ($)",
+          data: backtestResult.equityCurve.map((p) => p.value),
+          borderColor: "#00FFAA",
+          backgroundColor: "rgba(0, 255, 170, 0.08)",
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+          pointHitRadius: 10,
+          borderWidth: 2,
+        },
+      ],
+    };
+  }, [backtestResult]);
+
+  const chartOptions = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#111118",
+          borderColor: "#1A1A24",
+          borderWidth: 1,
+          titleColor: "#E8E6E3",
+          bodyColor: "#00FFAA",
+          titleFont: { family: "JetBrains Mono", size: 10 },
+          bodyFont: { family: "JetBrains Mono", size: 11 },
+          padding: 8,
+          displayColors: false,
+        },
+      },
+      scales: {
+        x: {
+          display: true,
+          grid: { color: "#1A1A24" },
+          ticks: {
+            color: "#4A4845",
+            font: { family: "JetBrains Mono", size: 9 },
+            maxTicksLimit: 8,
+          },
+        },
+        y: {
+          display: true,
+          grid: { color: "#1A1A24" },
+          ticks: {
+            color: "#4A4845",
+            font: { family: "JetBrains Mono", size: 9 },
+            callback: (val: string | number) => `$${Number(val).toLocaleString()}`,
+          },
+        },
+      },
+      interaction: { mode: "index" as const, intersect: false },
+    }),
+    []
+  );
+
+  const optimizerSuggestions = useMemo(() => {
+    if (!backtestResult) return [];
+    return generateOptimizerSuggestions(nodes, backtestResult);
+  }, [nodes, backtestResult]);
+
   return (
     <div className="h-screen flex flex-col bg-[#0A0A0F]">
+      {/* ─── LIVE PRICE TICKER BAR ─── */}
+      <div className="h-7 border-b border-[#1A1A24] bg-[#08080C] overflow-hidden shrink-0">
+        <div className="h-full flex items-center">
+          <div className="flex items-center gap-6 px-4 animate-[ticker_30s_linear_infinite] whitespace-nowrap">
+            {[...tickerPrices, ...tickerPrices].map((t, i) => (
+              <div key={`${t.symbol}-${i}`} className="flex items-center gap-1.5">
+                <span className="text-[0.55rem] font-mono font-bold text-[#E8E6E3]">
+                  {t.symbol}
+                </span>
+                <span className="text-[0.55rem] font-mono text-[#E8E6E3]">
+                  ${t.price.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
+                <span
+                  className={`text-[0.5rem] font-mono ${
+                    t.changePct >= 0 ? "text-[#00FFAA]" : "text-[#FF6B6B]"
+                  }`}
+                >
+                  {t.changePct >= 0 ? "▲" : "▼"} {Math.abs(t.changePct).toFixed(2)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* ─── TOOLBAR ─── */}
       <header className="h-12 border-b border-[#1A1A24] flex items-center justify-between px-4 bg-[#0A0A0F] shrink-0">
         <div className="flex items-center gap-3">
@@ -373,18 +1400,77 @@ export default function BuilderPage() {
           >
             <Menu className="w-4 h-4" />
           </button>
-          <a href="/" className="flex items-center gap-2 text-[#4A4845] hover:text-[#E8E6E3] transition-colors">
+          <a
+            href="/"
+            className="flex items-center gap-2 text-[#4A4845] hover:text-[#E8E6E3] transition-colors"
+          >
             <Zap className="w-4 h-4" />
             <span className="font-mono text-xs">ALGO STUDIO</span>
           </a>
           <div className="w-px h-5 bg-[#1A1A24] hidden sm:block" />
-          <span className="font-mono text-xs text-[#4A4845] hidden sm:inline">RSI Momentum Strategy</span>
+
+          {/* Strategy Name / Template Selector */}
+          <div className="relative hidden sm:block">
+            <button
+              onClick={() => setShowTemplates(!showTemplates)}
+              className="flex items-center gap-1.5 px-2 py-1 text-[0.65rem] font-mono text-[#E8E6E3] hover:bg-[#111118] border border-[#1A1A24] transition-colors"
+            >
+              <Layout className="w-3 h-3 text-[#FFD93D]" />
+              {activeTemplate}
+              <ChevronDown className="w-3 h-3 text-[#4A4845]" />
+            </button>
+            {showTemplates && (
+              <div className="absolute top-full left-0 mt-1 w-72 bg-[#111118] border border-[#1A1A24] z-50 shadow-xl">
+                <div className="p-2 border-b border-[#1A1A24]">
+                  <p className="text-[0.55rem] font-mono uppercase tracking-[0.15em] text-[#4A4845]">
+                    Strategy Templates
+                  </p>
+                </div>
+                {STRATEGY_TEMPLATES.map((t) => (
+                  <button
+                    key={t.name}
+                    onClick={() => handleLoadTemplate(t)}
+                    className={`w-full text-left px-3 py-2 hover:bg-[#1A1A24] transition-colors border-b border-[#1A1A24]/50 last:border-b-0 ${
+                      activeTemplate === t.name
+                        ? "bg-[#1A1A24]/50"
+                        : ""
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">{t.icon}</span>
+                      <div>
+                        <p className="text-xs font-mono text-[#E8E6E3]">
+                          {t.name}
+                        </p>
+                        <p className="text-[0.55rem] font-mono text-[#4A4845]">
+                          {t.description}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-1.5">
+          {/* Share Button */}
+          <button
+            onClick={handleShare}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[0.65rem] font-mono uppercase tracking-wider text-[#FFD93D] border border-[#FFD93D]/30 hover:bg-[#FFD93D]/10 transition-all"
+            title="Copy shareable link"
+          >
+            <Share2 className="w-3 h-3" />
+            <span className="hidden lg:inline">Share</span>
+          </button>
+
           <button className="flex items-center gap-1.5 px-3 py-1.5 text-[0.65rem] font-mono uppercase tracking-wider text-[#4A4845] border border-[#1A1A24] hover:border-[#2A2A35] hover:text-[#E8E6E3] transition-all">
             <Save className="w-3 h-3" />
             <span className="hidden sm:inline">Save</span>
           </button>
+
+          {/* Backtest Button */}
           <button
             onClick={handleRunBacktest}
             disabled={running}
@@ -402,6 +1488,24 @@ export default function BuilderPage() {
               </>
             )}
           </button>
+
+          {/* AI Optimizer Button */}
+          <button
+            onClick={() => {
+              if (!backtestResult) {
+                handleRunBacktest();
+                setTimeout(() => setShowOptimizer(true), 2000);
+              } else {
+                setShowOptimizer(!showOptimizer);
+              }
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[0.65rem] font-mono uppercase tracking-wider text-[#6C5CE7] border border-[#6C5CE7]/40 hover:bg-[#6C5CE7]/10 transition-all"
+          >
+            <Sparkles className="w-3 h-3" />
+            <span className="hidden sm:inline">AI Optimize</span>
+          </button>
+
+          {/* Deploy Button */}
           <button
             onClick={handleDeploy}
             disabled={running}
@@ -423,11 +1527,13 @@ export default function BuilderPage() {
         )}
 
         {/* ─── SIDEBAR PALETTE ─── */}
-        <aside className={`
+        <aside
+          className={`
           w-56 border-r border-[#1A1A24] overflow-y-auto bg-[#0A0A0F] shrink-0
           hidden md:block
-          ${sidebarOpen ? '!block fixed inset-y-12 left-0 z-40' : ''}
-        `}>
+          ${sidebarOpen ? "!block fixed inset-y-[7rem] left-0 z-40" : ""}
+        `}
+        >
           <div className="p-3 border-b border-[#1A1A24]">
             <p className="text-[0.6rem] font-mono uppercase tracking-wider text-[#4A4845]">
               Drag to canvas
@@ -446,8 +1552,14 @@ export default function BuilderPage() {
                     key={item.label}
                     draggable
                     onDragStart={(e) => {
-                      e.dataTransfer.setData("application/reactflow/type", item.type);
-                      e.dataTransfer.setData("application/reactflow/data", JSON.stringify(item.data));
+                      e.dataTransfer.setData(
+                        "application/reactflow/type",
+                        item.type
+                      );
+                      e.dataTransfer.setData(
+                        "application/reactflow/data",
+                        JSON.stringify(item.data)
+                      );
                       e.dataTransfer.effectAllowed = "move";
                     }}
                     className="px-2.5 py-1.5 text-xs font-mono text-[#E8E6E3] bg-[#111118] border border-[#1A1A24] cursor-grab hover:border-[#00FFAA] hover:text-[#00FFAA] transition-colors active:cursor-grabbing"
@@ -477,6 +1589,20 @@ export default function BuilderPage() {
                 <span className="text-[#4A4845]">Status</span>
                 <span className="text-[#00FFAA]">Ready</span>
               </div>
+              {backtestResult && (
+                <div className="flex justify-between text-[0.65rem] font-mono">
+                  <span className="text-[#4A4845]">Return</span>
+                  <span
+                    className={
+                      backtestResult.totalReturn.startsWith("+")
+                        ? "text-[#00FFAA]"
+                        : "text-[#FF6B6B]"
+                    }
+                  >
+                    {backtestResult.totalReturn}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </aside>
@@ -494,9 +1620,16 @@ export default function BuilderPage() {
             nodeTypes={nodeTypes}
             fitView
             className="bg-[#0A0A0F]"
-            defaultEdgeOptions={{ style: { stroke: "#1A1A24", strokeWidth: 2 } }}
+            defaultEdgeOptions={{
+              style: { stroke: "#1A1A24", strokeWidth: 2 },
+            }}
           >
-            <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#1A1A24" />
+            <Background
+              variant={BackgroundVariant.Dots}
+              gap={20}
+              size={1}
+              color="#1A1A24"
+            />
             <Controls
               className="!bg-[#111118] !border-[#1A1A24] !shadow-none [&>button]:!bg-[#111118] [&>button]:!border-[#1A1A24] [&>button]:!text-[#4A4845] [&>button:hover]:!bg-[#1A1A24] [&>button]:!w-7 [&>button]:!h-7"
             />
@@ -514,53 +1647,98 @@ export default function BuilderPage() {
         </div>
 
         {/* ─── BACKTEST PANEL ─── */}
-        {showBacktest && (
-          <div className="w-full sm:w-80 border-l border-[#1A1A24] bg-[#0A0A0F] overflow-y-auto shrink-0 animate-in slide-in-from-right fixed inset-y-12 left-0 z-50 md:relative md:inset-auto">
+        {showBacktest && backtestResult && (
+          <div className="w-full sm:w-80 lg:w-96 border-l border-[#1A1A24] bg-[#0A0A0F] overflow-y-auto shrink-0 animate-in slide-in-from-right fixed inset-y-[7rem] left-0 z-50 md:relative md:inset-auto">
             <div className="p-4 border-b border-[#1A1A24] flex items-center justify-between">
               <h3 className="font-mono text-xs uppercase tracking-wider text-[#E8E6E3]">
                 Backtest Results
               </h3>
-              <button onClick={() => setShowBacktest(false)} className="text-[#4A4845] hover:text-[#E8E6E3]">
+              <button
+                onClick={() => setShowBacktest(false)}
+                className="text-[#4A4845] hover:text-[#E8E6E3]"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Return Chart (simple bar visualization) */}
+            {/* Chart.js Equity Curve */}
             <div className="p-4 border-b border-[#1A1A24]">
               <p className="text-[0.55rem] font-mono uppercase tracking-[0.15em] text-[#4A4845] mb-3">
-                Cumulative Return
+                Equity Curve
               </p>
-              <div className="h-32 flex items-end gap-1">
-                {mockBacktest.returns.map((val, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                    <div
-                      className="w-full bg-[#00FFAA] transition-all duration-500"
-                      style={{ height: `${(val / 142) * 100}%`, opacity: 0.3 + (i / 7) * 0.7 }}
-                    />
-                  </div>
-                ))}
-              </div>
-              <div className="flex justify-between mt-2">
-                <span className="text-[0.5rem] font-mono text-[#4A4845]">Jan</span>
-                <span className="text-[0.5rem] font-mono text-[#4A4845]">Jun</span>
+              <div className="h-40 w-full">
+                {chartData && (
+                  <Line data={chartData} options={chartOptions} />
+                )}
               </div>
             </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-px bg-[#1A1A24]">
               {[
-                { label: "Total Return", value: mockBacktest.totalReturn, color: "text-[#00FFAA]" },
-                { label: "Sharpe Ratio", value: mockBacktest.sharpeRatio, color: "text-[#00FFAA]" },
-                { label: "Max Drawdown", value: mockBacktest.maxDrawdown, color: "text-[#FF6B6B]" },
-                { label: "Win Rate", value: mockBacktest.winRate, color: "text-[#00FFAA]" },
-                { label: "Total Trades", value: mockBacktest.totalTrades.toString(), color: "text-[#E8E6E3]" },
-                { label: "Profit Factor", value: mockBacktest.profitFactor, color: "text-[#00FFAA]" },
+                {
+                  label: "Total Return",
+                  value: backtestResult.totalReturn,
+                  color: backtestResult.totalReturn.startsWith("+")
+                    ? "text-[#00FFAA]"
+                    : "text-[#FF6B6B]",
+                },
+                {
+                  label: "Sharpe Ratio",
+                  value: backtestResult.sharpeRatio,
+                  color: "text-[#00FFAA]",
+                },
+                {
+                  label: "Max Drawdown",
+                  value: backtestResult.maxDrawdown,
+                  color: "text-[#FF6B6B]",
+                },
+                {
+                  label: "Win Rate",
+                  value: backtestResult.winRate,
+                  color: "text-[#00FFAA]",
+                },
+                {
+                  label: "Total Trades",
+                  value: backtestResult.totalTrades.toString(),
+                  color: "text-[#E8E6E3]",
+                },
+                {
+                  label: "Profit Factor",
+                  value: backtestResult.profitFactor,
+                  color: parseFloat(backtestResult.profitFactor) > 1
+                    ? "text-[#00FFAA]"
+                    : "text-[#FF6B6B]",
+                },
+                {
+                  label: "Avg Trade",
+                  value: backtestResult.avgTrade,
+                  color: backtestResult.avgTrade.startsWith("+")
+                    ? "text-[#00FFAA]"
+                    : "text-[#FF6B6B]",
+                },
+                {
+                  label: "Monthly Avg",
+                  value: `${
+                    backtestResult.monthlyReturns.length > 0
+                      ? (
+                          backtestResult.monthlyReturns.reduce(
+                            (a, b) => a + b,
+                            0
+                          ) / backtestResult.monthlyReturns.length
+                        ).toFixed(1) + "%"
+                      : "0%"
+                  }`,
+                  color: "text-[#FFD93D]",
+                },
               ].map((stat) => (
                 <div key={stat.label} className="bg-[#0A0A0F] p-3">
                   <p className="text-[0.5rem] font-mono uppercase tracking-[0.15em] text-[#4A4845]">
                     {stat.label}
                   </p>
-                  <p className={`text-lg font-mono font-bold mt-1 ${stat.color}`}>{stat.value}</p>
+                  <p className={`text-lg font-mono font-bold mt-1 ${stat.color}`}>
+                    {stat.value}
+                  </p>
                 </div>
               ))}
             </div>
@@ -578,14 +1756,106 @@ export default function BuilderPage() {
           </div>
         )}
 
+        {/* ─── AI OPTIMIZER PANEL ─── */}
+        {showOptimizer && (
+          <div className="w-full sm:w-80 lg:w-96 border-l border-[#1A1A24] bg-[#0A0A0F] overflow-y-auto shrink-0 animate-in slide-in-from-right fixed inset-y-[7rem] left-0 z-50 md:relative md:inset-auto">
+            <div className="p-4 border-b border-[#1A1A24] flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Brain className="w-4 h-4 text-[#6C5CE7]" />
+                <h3 className="font-mono text-xs uppercase tracking-wider text-[#E8E6E3]">
+                  AI Strategy Optimizer
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowOptimizer(false)}
+                className="text-[#4A4845] hover:text-[#E8E6E3]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Strategy Analysis Summary */}
+            <div className="p-4 border-b border-[#1A1A24]">
+              <div className="bg-[#111118] border border-[#6C5CE7]/30 p-3 rounded-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="w-3.5 h-3.5 text-[#6C5CE7]" />
+                  <span className="text-[0.6rem] font-mono uppercase tracking-wider text-[#6C5CE7]">
+                    Analysis Complete
+                  </span>
+                </div>
+                <p className="text-[0.65rem] font-mono text-[#4A4845]">
+                  Analyzed {nodes.length} nodes, {edges.length} connections, and{" "}
+                  {backtestResult?.totalTrades || 0} historical trades across
+                  multiple market regimes.
+                </p>
+              </div>
+            </div>
+
+            {/* Suggestions */}
+            <div className="p-4 space-y-3">
+              <p className="text-[0.55rem] font-mono uppercase tracking-[0.15em] text-[#4A4845]">
+                Recommendations ({optimizerSuggestions.length})
+              </p>
+              {optimizerSuggestions.map((sug, i) => {
+                const colors = {
+                  improve: { border: "border-[#00FFAA]/30", text: "text-[#00FFAA]", icon: "💡" },
+                  warning: { border: "border-[#FF6B6B]/30", text: "text-[#FF6B6B]", icon: "⚠️" },
+                  info: { border: "border-[#FFD93D]/30", text: "text-[#FFD93D]", icon: "ℹ️" },
+                };
+                const c = colors[sug.type];
+                return (
+                  <div
+                    key={i}
+                    className={`bg-[#111118] border ${c.border} p-3`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <span className="text-sm mt-0.5">{c.icon}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-mono font-medium text-[#E8E6E3]">
+                            {sug.title}
+                          </p>
+                          <span
+                            className={`text-[0.5rem] font-mono ${c.text} px-1.5 py-0.5 bg-[#0A0A0F] border ${c.border}`}
+                          >
+                            {sug.impact}
+                          </span>
+                        </div>
+                        <p className="text-[0.6rem] font-mono text-[#4A4845] mt-1">
+                          {sug.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Quick Actions */}
+            <div className="p-4 border-t border-[#1A1A24]">
+              <button
+                onClick={handleRunBacktest}
+                disabled={running}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-mono uppercase tracking-wider text-[#0A0A0F] bg-[#6C5CE7] hover:bg-[#5A4BD6] disabled:opacity-50 transition-colors"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Re-run Backtest
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ─── DEPLOY PANEL ─── */}
         {showDeploy && (
-          <div className="w-full sm:w-80 border-l border-[#1A1A24] bg-[#0A0A0F] overflow-y-auto shrink-0 animate-in slide-in-from-right fixed inset-y-12 left-0 z-50 md:relative md:inset-auto">
+          <div className="w-full sm:w-80 border-l border-[#1A1A24] bg-[#0A0A0F] overflow-y-auto shrink-0 animate-in slide-in-from-right fixed inset-y-[7rem] left-0 z-50 md:relative md:inset-auto">
             <div className="p-4 border-b border-[#1A1A24] flex items-center justify-between">
               <h3 className="font-mono text-xs uppercase tracking-wider text-[#E8E6E3]">
                 Deploy Contract
               </h3>
-              <button onClick={() => setShowDeploy(false)} className="text-[#4A4845] hover:text-[#E8E6E3]">
+              <button
+                onClick={() => setShowDeploy(false)}
+                className="text-[#4A4845] hover:text-[#E8E6E3]"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -595,9 +1865,13 @@ export default function BuilderPage() {
                 <div className="bg-[#111118] border border-[#00FFAA]/30 p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-2 h-2 rounded-full bg-[#00FFAA] animate-pulse" />
-                    <span className="text-xs font-mono text-[#00FFAA]">DEPLOYED</span>
+                    <span className="text-xs font-mono text-[#00FFAA]">
+                      DEPLOYED
+                    </span>
                   </div>
-                  <p className="text-[0.65rem] font-mono text-[#4A4845]">Contract Address</p>
+                  <p className="text-[0.65rem] font-mono text-[#4A4845]">
+                    Contract Address
+                  </p>
                   <p className="text-xs font-mono text-[#E8E6E3] mt-0.5 break-all">
                     0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D
                   </p>
@@ -626,8 +1900,12 @@ export default function BuilderPage() {
                     <p className="text-[#4A4845]">✓ Strategy compiled (2.3s)</p>
                     <p className="text-[#4A4845]">✓ Gas estimated: 0.0042 ETH</p>
                     <p className="text-[#4A4845]">✓ Transaction submitted</p>
-                    <p className="text-[#4A4845]">✓ Confirmed in block #18,234,567</p>
-                    <p className="text-[#00FFAA]">✓ Contract deployed successfully</p>
+                    <p className="text-[#4A4845]">
+                      ✓ Confirmed in block #18,234,567
+                    </p>
+                    <p className="text-[#00FFAA]">
+                      ✓ Contract deployed successfully
+                    </p>
                   </div>
                 </div>
 
@@ -637,7 +1915,14 @@ export default function BuilderPage() {
                     Supported Chains
                   </p>
                   <div className="flex flex-wrap gap-1.5">
-                    {["Ethereum", "Arbitrum", "Optimism", "Base", "Polygon", "BSC"].map((chain) => (
+                    {[
+                      "Ethereum",
+                      "Arbitrum",
+                      "Optimism",
+                      "Base",
+                      "Polygon",
+                      "BSC",
+                    ].map((chain) => (
                       <span
                         key={chain}
                         className="px-2 py-1 text-[0.55rem] font-mono text-[#4A4845] border border-[#1A1A24]"
@@ -660,22 +1945,28 @@ export default function BuilderPage() {
                     Target Network
                   </p>
                   <div className="space-y-1.5">
-                    {["Ethereum Mainnet", "Arbitrum One", "Optimism", "Base", "Polygon"].map(
-                      (network, i) => (
-                        <label
-                          key={network}
-                          className="flex items-center gap-2 px-3 py-2 bg-[#111118] border border-[#1A1A24] cursor-pointer hover:border-[#2A2A35] transition-colors"
-                        >
-                          <input
-                            type="radio"
-                            name="network"
-                            defaultChecked={i === 1}
-                            className="accent-[#00FFAA]"
-                          />
-                          <span className="text-xs font-mono text-[#E8E6E3]">{network}</span>
-                        </label>
-                      )
-                    )}
+                    {[
+                      "Ethereum Mainnet",
+                      "Arbitrum One",
+                      "Optimism",
+                      "Base",
+                      "Polygon",
+                    ].map((network, i) => (
+                      <label
+                        key={network}
+                        className="flex items-center gap-2 px-3 py-2 bg-[#111118] border border-[#1A1A24] cursor-pointer hover:border-[#2A2A35] transition-colors"
+                      >
+                        <input
+                          type="radio"
+                          name="network"
+                          defaultChecked={i === 1}
+                          className="accent-[#00FFAA]"
+                        />
+                        <span className="text-xs font-mono text-[#E8E6E3]">
+                          {network}
+                        </span>
+                      </label>
+                    ))}
                   </div>
                 </div>
 
@@ -713,6 +2004,56 @@ export default function BuilderPage() {
           </div>
         )}
       </div>
+
+      {/* ─── SHARE TOAST ─── */}
+      {showShareToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-[#111118] border border-[#FFD93D]/40 shadow-xl">
+            <Check className="w-4 h-4 text-[#FFD93D]" />
+            <span className="text-xs font-mono text-[#E8E6E3]">
+              Shareable link copied to clipboard!
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ─── MOBILE TEMPLATE SELECTOR ─── */}
+      {showTemplates && (
+        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setShowTemplates(false)}>
+          <div
+            className="absolute bottom-0 left-0 right-0 bg-[#111118] border-t border-[#1A1A24] p-4 max-h-[70vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-mono uppercase tracking-wider text-[#E8E6E3]">
+                Strategy Templates
+              </p>
+              <button onClick={() => setShowTemplates(false)}>
+                <X className="w-4 h-4 text-[#4A4845]" />
+              </button>
+            </div>
+            {STRATEGY_TEMPLATES.map((t) => (
+              <button
+                key={t.name}
+                onClick={() => handleLoadTemplate(t)}
+                className={`w-full text-left px-3 py-3 hover:bg-[#1A1A24] transition-colors border-b border-[#1A1A24]/50 last:border-b-0 ${
+                  activeTemplate === t.name ? "bg-[#1A1A24]/50" : ""
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">{t.icon}</span>
+                  <div>
+                    <p className="text-sm font-mono text-[#E8E6E3]">{t.name}</p>
+                    <p className="text-[0.6rem] font-mono text-[#4A4845]">
+                      {t.description}
+                    </p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

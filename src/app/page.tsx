@@ -21,6 +21,25 @@ import {
   Terminal,
   Cpu,
 } from 'lucide-react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip,
+);
 
 /* ------------------------------------------------------------------ */
 /*  ANIMATED COUNTER                                                   */
@@ -477,6 +496,152 @@ const STATS = [
   { value: 12, suffix: '', label: 'Chains Supported', icon: Globe },
 ];
 
+/* ------------------------------------------------------------------ */
+/*  LIVE DEMO                                                         */
+/* ------------------------------------------------------------------ */
+const DEMO_LABELS = Array.from({ length: 30 }, (_, i) => `Day ${i + 1}`);
+const DEMO_EQUITY = [
+  10000, 10080, 10150, 10090, 10210, 10300, 10250, 10380, 10420, 10510,
+  10470, 10590, 10680, 10620, 10740, 10830, 10780, 10900, 11020, 10950,
+  11080, 11170, 11250, 11180, 11320, 11410, 11350, 11490, 11580, 11670,
+];
+
+function LiveDemo() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-80px' });
+
+  const chartData = {
+    labels: DEMO_LABELS,
+    datasets: [
+      {
+        label: 'Equity Curve',
+        data: DEMO_EQUITY,
+        borderColor: '#00FFAA',
+        backgroundColor: 'rgba(0, 255, 170, 0.06)',
+        fill: true,
+        tension: 0.35,
+        pointRadius: 0,
+        borderWidth: 2,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#111118',
+        borderColor: '#1A1A24',
+        borderWidth: 1,
+        titleFont: { family: 'monospace', size: 11 },
+        bodyFont: { family: 'monospace', size: 12, weight: 'bold' as const },
+        titleColor: '#4A4845',
+        bodyColor: '#00FFAA',
+        padding: 10,
+        displayColors: false,
+        callbacks: {
+          label: (ctx: { parsed: { y: number | null } }) =>
+            `Equity: $${(ctx.parsed.y ?? 0).toLocaleString()}`,
+        },
+      },
+    },
+    scales: {
+      x: {
+        display: false,
+      },
+      y: {
+        display: false,
+      },
+    },
+  } as const;
+
+  return (
+    <section id="live-demo" className="relative border-t border-border bg-card/30 px-6 py-24 sm:py-32">
+      <div className="mx-auto max-w-7xl">
+        {/* Section header */}
+        <div className="mb-16 text-center">
+          <span className="mb-4 block font-mono text-xs uppercase tracking-[0.3em] text-accent">
+            // Live Demo
+          </span>
+          <h2 className="text-4xl font-black tracking-tight sm:text-5xl">
+            See it in action.
+            <br />
+            <span className="text-muted">Real strategy performance.</span>
+          </h2>
+        </div>
+
+        <div ref={ref}>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+            className="mx-auto max-w-5xl overflow-hidden border border-border bg-card"
+          >
+            {/* Top bar */}
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-6 py-4">
+              <div className="flex items-center gap-3">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent" />
+                </span>
+                <span className="font-mono text-sm font-bold uppercase tracking-wide text-foreground">
+                  Momentum Scalper
+                </span>
+                <span className="border border-accent/20 bg-accent/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-accent">
+                  Live
+                </span>
+              </div>
+              <span className="font-mono text-xs text-muted">
+                Ethereum &middot; 30-day backtest
+              </span>
+            </div>
+
+            {/* Chart */}
+            <div className="h-56 px-4 pt-4 sm:h-72">
+              <Line data={chartData} options={chartOptions} />
+            </div>
+
+            {/* Metrics row */}
+            <div className="grid grid-cols-2 border-t border-border sm:grid-cols-4">
+              {[
+                { label: 'Total Return', value: '+16.7%', positive: true },
+                { label: 'Sharpe Ratio', value: '2.34', positive: true },
+                { label: 'Win Rate', value: '68.2%', positive: true },
+                { label: 'Max Drawdown', value: '-3.8%', positive: false },
+              ].map((m) => (
+                <div key={m.label} className="border-border p-4 text-center sm:border-r last:border-r-0">
+                  <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-muted">
+                    {m.label}
+                  </div>
+                  <div className={`font-mono text-lg font-bold ${m.positive ? 'text-accent' : 'text-red-400'}`}>
+                    {m.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA bar */}
+            <div className="flex flex-col gap-4 border-t border-border px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+              <p className="font-mono text-xs text-muted">
+                Strategy: RSI &lt; 30 &amp; MACD crossover &amp; Volume spike &rarr; Buy
+              </p>
+              <a
+                href="/builder"
+                className="group inline-flex items-center gap-2 border border-accent bg-accent/10 px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest text-accent transition-all hover:bg-accent hover:text-background whitespace-nowrap"
+              >
+                Try Builder
+                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+              </a>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Stats() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-80px' });
@@ -664,6 +829,7 @@ export default function Home() {
       <Features />
       <HowItWorks />
       <Stats />
+      <LiveDemo />
       <CTA />
       <Footer />
     </main>
