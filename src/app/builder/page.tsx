@@ -595,7 +595,7 @@ function generateOHLCV(days: number, startPrice: number): OHLCV[] {
 
   for (let i = 0; i < days; i++) {
     const drift = 0.0002;
-    const vol = 0.018;
+    const vol = 0.035;
     const ret = drift + vol * (rand() + rand() + rand() - 1.5);
     const open = price;
     price *= 1 + ret;
@@ -735,8 +735,8 @@ function runBacktest(nodes: Node[], edges: Edge[]): BacktestResult {
   const { upper: bbUpper, lower: bbLower } = computeBollinger(closes, 20, 2);
 
   // Determine strategy parameters from nodes
-  let buyThreshold = 30;
-  let sellThreshold = 70;
+  let buyThreshold = 35;
+  let sellThreshold = 65;
   let hasRSI = indicators.some((n) => n.data.indicator === "RSI");
   let hasMACD = indicators.some((n) => n.data.indicator === "MACD");
   let hasBB = indicators.some((n) => n.data.indicator === "Bollinger Bands");
@@ -755,8 +755,8 @@ function runBacktest(nodes: Node[], edges: Edge[]): BacktestResult {
   });
 
   // Has any action node?
-  const hasBuy = actions.some((a) => a.data.action === "BUY");
-  const hasSell = actions.some(
+  let hasBuy = actions.some((a) => a.data.action === "BUY");
+  let hasSell = actions.some(
     (a) => a.data.action === "SELL" || a.data.action === "STOP_LOSS"
   );
 
@@ -764,8 +764,8 @@ function runBacktest(nodes: Node[], edges: Edge[]): BacktestResult {
   if (!hasRSI && !hasMACD && !hasBB && !hasMA && !hasStoch) {
     hasRSI = true;
   }
-  if (!hasBuy) hasBuy; // defaults
-  if (!hasSell) hasSell;
+  if (!hasBuy) hasBuy = true;
+  if (!hasSell) hasSell = true;
 
   // Simulate
   let cash = 10000;
