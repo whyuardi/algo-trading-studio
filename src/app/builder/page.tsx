@@ -1239,10 +1239,16 @@ export default function BuilderPage() {
     setShowDeploy(false);
     setShowOptimizer(false);
     setTimeout(() => {
-      const result = runBacktest(nodes, edges);
-      setBacktestResult(result);
-      setRunning(false);
-      setShowBacktest(true);
+      try {
+        const result = runBacktest(nodes, edges);
+        console.log('Backtest result:', result);
+        setBacktestResult(result);
+        setRunning(false);
+        setShowBacktest(true);
+      } catch (e) {
+        console.error('Backtest error:', e);
+        setRunning(false);
+      }
     }, 1500);
   };
 
