@@ -190,7 +190,7 @@ function Navbar() {
 /* ------------------------------------------------------------------ */
 function Hero() {
   return (
-    <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 pt-16">
+    <section className="relative flex min-h-screen flex-col items-center justify-center overflow-x-hidden px-6 pt-16">
       <GridBackground />
 
       {/* Glow orb */}
@@ -198,34 +198,34 @@ function Hero() {
         className="pointer-events-none absolute top-1/3 left-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-20 blur-[120px]"
         style={{ background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)' }}
       />
+      <div className="relative z-10 mx-auto w-full max-w-5xl px-0 text-center sm:px-4">
 
-      <div className="relative z-10 mx-auto max-w-5xl text-center">
         {/* Status badge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-8 inline-flex items-center gap-2 border border-border bg-card px-4 py-2"
+          className="mx-auto mb-6 inline-flex w-max max-w-full items-center gap-2 border border-border bg-card px-3 py-1.5 sm:mb-8 sm:px-4 sm:py-2"
         >
-          <span className="relative flex h-2 w-2">
+          <span className="relative flex h-2 w-2 shrink-0">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
           </span>
-          <span className="font-mono text-xs uppercase tracking-widest text-muted">
+          <span className="truncate font-mono text-[10px] uppercase tracking-widest text-muted sm:text-xs">
             v2.4 — Now supporting 12 chains
           </span>
         </motion.div>
 
-        {/* Main headline */}
+        {/* Main headline — inline wraps on mobile, stacked on desktop */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.1 }}
-          className="mb-6 text-4xl font-black leading-[0.9] tracking-tighter sm:text-6xl md:text-8xl lg:text-9xl"
+          className="mb-4 text-5xl font-black leading-[1.1] tracking-tight sm:mb-6 sm:text-6xl sm:leading-[0.9] sm:tracking-tighter md:text-8xl lg:text-9xl"
         >
-          <span className="block text-foreground">Build.</span>
-          <span className="block text-foreground">Backtest.</span>
-          <span className="block text-accent">Deploy.</span>
+          <span className="inline sm:block text-foreground">Build.<span className="hidden sm:inline"><br /></span> </span>
+          <span className="inline sm:block text-foreground">Backtest.<span className="hidden sm:inline"><br /></span> </span>
+          <span className="inline sm:block text-accent">Deploy.</span>
         </motion.h1>
 
         {/* Subtitle */}
@@ -233,7 +233,7 @@ function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-muted sm:text-xl"
+          className="mx-auto mb-8 max-w-full px-2 text-base leading-relaxed text-muted sm:mb-10 sm:max-w-2xl sm:px-0 sm:text-lg lg:text-xl"
         >
           The visual trading strategy builder for DeFi.
           Drag. Connect. Ship. No code. No limits.
@@ -244,21 +244,21 @@ function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.45 }}
-          className="flex flex-col items-center justify-center gap-4 sm:flex-row"
+          className="mx-auto flex w-full max-w-sm flex-col items-center gap-3 sm:max-w-none sm:flex-row sm:justify-center sm:gap-4"
         >
           <a
-            href="#cta"
-            className="group flex items-center gap-2 border border-accent bg-accent px-8 py-4 font-mono text-sm font-bold uppercase tracking-widest text-background transition-all hover:shadow-[0_0_30px_rgba(0,255,170,0.4)]"
+            href="/builder"
+            className="group flex w-full items-center justify-center gap-2 border border-accent bg-accent px-6 py-3.5 font-mono text-xs font-bold uppercase tracking-widest text-background transition-all hover:shadow-[0_0_30px_rgba(0,255,170,0.4)] sm:w-auto sm:px-8 sm:py-4 sm:text-sm"
           >
             Start Building
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1 sm:h-4 sm:w-4" />
           </a>
           <a
             href="#features"
-            className="flex items-center gap-2 border border-border bg-card px-8 py-4 font-mono text-sm font-bold uppercase tracking-widest text-foreground/70 transition-all hover:border-accent/40 hover:text-accent"
+            className="group flex w-full items-center justify-center gap-2 border border-border bg-card px-6 py-3.5 font-mono text-xs font-bold uppercase tracking-widest text-foreground/70 transition-all hover:border-accent/40 hover:text-accent sm:w-auto sm:px-8 sm:py-4 sm:text-sm"
           >
             Explore Features
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 sm:h-4 sm:w-4" />
           </a>
         </motion.div>
 
@@ -267,15 +267,15 @@ function Hero() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
-          className="mx-auto mt-16 max-w-2xl border border-border bg-card/80 p-6 text-left font-mono text-xs backdrop-blur-sm sm:text-sm"
+          className="mx-auto mt-10 w-full max-w-full border border-border bg-card/80 p-4 text-left font-mono text-xs backdrop-blur-sm sm:mt-16 sm:max-w-2xl sm:p-6 sm:text-sm"
         >
-          <div className="mb-3 flex items-center gap-2 border-b border-border pb-3">
-            <div className="h-2.5 w-2.5 rounded-full bg-foreground/10" />
-            <div className="h-2.5 w-2.5 rounded-full bg-foreground/10" />
-            <div className="h-2.5 w-2.5 rounded-full bg-foreground/10" />
-            <span className="ml-2 text-muted">strategy.algo</span>
+          <div className="mb-2 flex items-center gap-2 border-b border-border pb-2 sm:mb-3 sm:pb-3">
+            <div className="h-2 w-2 rounded-full bg-foreground/10 sm:h-2.5 sm:w-2.5" />
+            <div className="h-2 w-2 rounded-full bg-foreground/10 sm:h-2.5 sm:w-2.5" />
+            <div className="h-2 w-2 rounded-full bg-foreground/10 sm:h-2.5 sm:w-2.5" />
+            <span className="ml-1.5 truncate text-muted sm:ml-2">strategy.algo</span>
           </div>
-          <pre className="overflow-x-auto text-foreground/60">
+          <pre className="overflow-x-auto whitespace-pre text-foreground/60">
             <span className="text-accent">const</span> strategy = {'{'}
             {'\n'}{'  '}name: <span className="text-amber-400/80">&quot;Momentum Scalper&quot;</span>,
             {'\n'}{'  '}chain: <span className="text-amber-400/80">&quot;ethereum&quot;</span>,
@@ -283,7 +283,7 @@ function Hero() {
             {'\n'}{'  '}risk: {'{ '}maxDrawdown: <span className="text-accent">0.05</span>, stopLoss: <span className="text-accent">0.02</span> {'}'},
             {'\n'}{'}'};
             {'\n'}
-            {'\n'}<span className="text-accent">await</span> strategy.<span className="text-foreground/80">deploy</span>();  <span className="text-muted">// deployed to mainnet ✓</span>
+            {'\n'}
           </pre>
         </motion.div>
       </div>
@@ -355,14 +355,14 @@ function Features() {
   const inView = useInView(ref, { once: true, margin: '-80px' });
 
   return (
-    <section id="features" className="relative border-t border-border bg-background px-6 py-16 sm:py-32">
+    <section id="features" className="relative border-t border-border bg-background px-4 py-12 sm:px-6 sm:py-32">
       <div className="mx-auto max-w-7xl">
         {/* Section header */}
-        <div className="mb-16 max-w-2xl">
-          <span className="mb-4 block font-mono text-xs uppercase tracking-[0.3em] text-accent">
+        <div className="mb-10 max-w-2xl sm:mb-16">
+          <span className="mb-3 block font-mono text-[10px] uppercase tracking-[0.3em] text-accent sm:mb-4 sm:text-xs">
             // Features
           </span>
-          <h2 className="text-4xl font-black tracking-tight sm:text-5xl">
+          <h2 className="text-3xl font-black leading-[1.15] tracking-tight sm:text-5xl">
             Everything you need.
             <br />
             <span className="text-muted">Nothing you don&apos;t.</span>
@@ -370,28 +370,28 @@ function Features() {
         </div>
 
         {/* Features grid */}
-        <div ref={ref} className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <div ref={ref} className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f, i) => (
             <motion.div
               key={f.title}
               initial={{ opacity: 0, y: 30 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: i * 0.08 }}
-              className="group relative border border-border bg-card p-6 transition-all duration-300 hover:border-accent/30 hover:bg-card/80"
+              className="group relative border border-border bg-card p-5 transition-all duration-300 hover:border-accent/30 hover:bg-card/80 sm:p-6"
             >
               {/* Corner tag */}
-              <span className="absolute top-3 right-3 font-mono text-[10px] uppercase tracking-widest text-muted/50">
+              <span className="absolute top-2 right-2 font-mono text-[9px] uppercase tracking-widest text-muted/50 sm:top-3 sm:right-3 sm:text-[10px]">
                 {f.tag}
               </span>
 
-              <div className="mb-4 flex h-10 w-10 items-center justify-center border border-border bg-background transition-colors group-hover:border-accent/30">
-                <f.icon className="h-5 w-5 text-accent" />
+              <div className="mb-3 flex h-9 w-9 items-center justify-center border border-border bg-background transition-colors group-hover:border-accent/30 sm:mb-4 sm:h-10 sm:w-10">
+                <f.icon className="h-4 w-4 text-accent sm:h-5 sm:w-5" />
               </div>
 
-              <h3 className="mb-2 font-mono text-sm font-bold uppercase tracking-wide text-foreground">
+              <h3 className="mb-1.5 font-mono text-xs font-bold uppercase tracking-wide text-foreground sm:mb-2 sm:text-sm">
                 {f.title}
               </h3>
-              <p className="text-sm leading-relaxed text-muted">
+              <p className="text-xs leading-relaxed text-muted sm:text-sm">
                 {f.description}
               </p>
 
@@ -437,14 +437,14 @@ function HowItWorks() {
   const inView = useInView(ref, { once: true, margin: '-80px' });
 
   return (
-    <section id="how-it-works" className="relative border-t border-border bg-card/30 px-6 py-16 sm:py-32">
+    <section id="how-it-works" className="relative border-t border-border bg-card/30 px-4 py-12 sm:px-6 sm:py-32">
       <div className="mx-auto max-w-7xl">
         {/* Section header */}
-        <div className="mb-16 max-w-2xl">
-          <span className="mb-4 block font-mono text-xs uppercase tracking-[0.3em] text-accent">
+        <div className="mb-10 max-w-2xl sm:mb-16">
+          <span className="mb-3 block font-mono text-[10px] uppercase tracking-[0.3em] text-accent sm:mb-4 sm:text-xs">
             // How it works
           </span>
-          <h2 className="text-4xl font-black tracking-tight sm:text-5xl">
+          <h2 className="text-3xl font-black leading-[1.15] tracking-tight sm:text-5xl">
             Three steps.
             <br />
             <span className="text-muted">Zero friction.</span>
@@ -452,17 +452,17 @@ function HowItWorks() {
         </div>
 
         {/* Steps */}
-        <div ref={ref} className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <div ref={ref} className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
           {STEPS.map((s, i) => (
             <motion.div
               key={s.num}
               initial={{ opacity: 0, y: 40 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: i * 0.15 }}
-              className="relative border border-border bg-card p-8"
+              className="relative border border-border bg-card p-5 sm:p-8"
             >
               {/* Step number */}
-              <span className="mb-6 block font-mono text-6xl font-black text-accent/10">
+              <span className="mb-4 block font-mono text-4xl font-black text-accent/15 sm:mb-6 sm:text-6xl sm:text-accent/10">
                 {s.num}
               </span>
 
@@ -471,20 +471,20 @@ function HowItWorks() {
                 <div className="absolute top-1/2 right-0 hidden h-[2px] w-8 translate-x-full bg-border lg:block" />
               )}
 
-              <div className="mb-4 flex h-10 w-10 items-center justify-center border border-accent/20 bg-accent/5">
-                <s.icon className="h-5 w-5 text-accent" />
+              <div className="mb-3 flex h-9 w-9 items-center justify-center border border-accent/20 bg-accent/5 sm:mb-4 sm:h-10 sm:w-10">
+                <s.icon className="h-4 w-4 text-accent sm:h-5 sm:w-5" />
               </div>
 
-              <h3 className="mb-3 font-mono text-lg font-bold uppercase tracking-wide text-foreground">
+              <h3 className="mb-2 font-mono text-sm font-bold uppercase tracking-wide text-foreground sm:mb-3 sm:text-lg">
                 {s.title}
               </h3>
-              <p className="mb-4 text-sm leading-relaxed text-muted">
+              <p className="mb-3 text-xs leading-relaxed text-muted sm:mb-4 sm:text-sm">
                 {s.description}
               </p>
 
               {/* Code-like detail */}
-              <div className="border-t border-border pt-4">
-                <span className="font-mono text-xs text-accent/70">
+              <div className="border-t border-border pt-3 sm:pt-4">
+                <span className="font-mono text-[10px] text-accent/70 sm:text-xs">
                   {s.detail}
                 </span>
               </div>
@@ -568,14 +568,14 @@ function LiveDemo() {
   } as const;
 
   return (
-    <section id="live-demo" className="relative border-t border-border bg-card/30 px-6 py-16 sm:py-32">
+    <section id="live-demo" className="relative border-t border-border bg-card/30 px-4 py-12 sm:px-6 sm:py-32">
       <div className="mx-auto max-w-7xl">
         {/* Section header */}
-        <div className="mb-16 text-center">
-          <span className="mb-4 block font-mono text-xs uppercase tracking-[0.3em] text-accent">
+        <div className="mb-10 text-center sm:mb-16">
+          <span className="mb-3 block font-mono text-[10px] uppercase tracking-[0.3em] text-accent sm:mb-4 sm:text-xs">
             // Live Demo
           </span>
-          <h2 className="text-4xl font-black tracking-tight sm:text-5xl">
+          <h2 className="text-3xl font-black leading-[1.15] tracking-tight sm:text-5xl">
             See it in action.
             <br />
             <span className="text-muted">Real strategy performance.</span>
@@ -590,26 +590,26 @@ function LiveDemo() {
             className="mx-auto max-w-5xl overflow-hidden border border-border bg-card"
           >
             {/* Top bar */}
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-6 py-4">
-              <div className="flex items-center gap-3">
-                <span className="relative flex h-2.5 w-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3 sm:gap-4 sm:px-6 sm:py-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-accent sm:h-2.5 sm:w-2.5" />
                 </span>
-                <span className="font-mono text-sm font-bold uppercase tracking-wide text-foreground">
+                <span className="font-mono text-[11px] font-bold uppercase tracking-wide text-foreground sm:text-sm">
                   Momentum Scalper
                 </span>
-                <span className="border border-accent/20 bg-accent/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-accent">
+                <span className="border border-accent/20 bg-accent/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-accent sm:px-2 sm:text-[10px]">
                   Live
                 </span>
               </div>
-              <span className="font-mono text-xs text-muted">
+              <span className="font-mono text-[10px] text-muted sm:text-xs">
                 Ethereum &middot; 30-day backtest
               </span>
             </div>
 
             {/* Chart */}
-            <div className="h-56 px-4 pt-4 sm:h-72">
+            <div className="h-48 px-3 pt-3 sm:h-72 sm:px-4 sm:pt-4">
               <Line data={chartData} options={chartOptions} />
             </div>
 
@@ -621,11 +621,11 @@ function LiveDemo() {
                 { label: 'Win Rate', value: '68.2%', positive: true },
                 { label: 'Max Drawdown', value: '-3.8%', positive: false },
               ].map((m) => (
-                <div key={m.label} className="border-border p-3 text-center sm:p-4 sm:border-r last:border-r-0">
-                  <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-muted">
+                <div key={m.label} className="border-border p-2.5 text-center sm:p-4 sm:border-r last:border-r-0">
+                  <div className="mb-0.5 font-mono text-[9px] uppercase tracking-widest text-muted sm:mb-1 sm:text-[10px]">
                     {m.label}
                   </div>
-                  <div className={`font-mono text-lg font-bold ${m.positive ? 'text-accent' : 'text-red-400'}`}>
+                  <div className={`font-mono text-sm font-bold sm:text-lg ${m.positive ? 'text-accent' : 'text-red-400'}`}>
                     {m.value}
                   </div>
                 </div>
@@ -633,16 +633,16 @@ function LiveDemo() {
             </div>
 
             {/* CTA bar */}
-            <div className="flex flex-col gap-4 border-t border-border px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-              <p className="font-mono text-xs text-muted">
+            <div className="flex flex-col gap-3 border-t border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6 sm:py-5">
+              <p className="font-mono text-[10px] text-muted sm:text-xs">
                 Strategy: RSI &lt; 30 &amp; MACD crossover &amp; Volume spike &rarr; Buy
               </p>
               <a
                 href="/builder"
-                className="group inline-flex items-center gap-2 border border-accent bg-accent/10 px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest text-accent transition-all hover:bg-accent hover:text-background whitespace-nowrap"
+                className="group inline-flex w-full items-center justify-center gap-2 border border-accent bg-accent/10 px-5 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-accent transition-all hover:bg-accent hover:text-background whitespace-nowrap sm:w-auto sm:px-6 sm:py-3 sm:text-xs"
               >
                 Try Builder
-                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5 sm:h-3.5 sm:w-3.5" />
               </a>
             </div>
           </motion.div>
@@ -657,33 +657,33 @@ function Stats() {
   const inView = useInView(ref, { once: true, margin: '-80px' });
 
   return (
-    <section id="stats" className="relative border-t border-border bg-background px-6 py-16 sm:py-32">
+    <section id="stats" className="relative border-t border-border bg-background px-4 py-12 sm:px-6 sm:py-32">
       <div className="mx-auto max-w-7xl">
         {/* Section header */}
-        <div className="mb-16 text-center">
-          <span className="mb-4 block font-mono text-xs uppercase tracking-[0.3em] text-accent">
+        <div className="mb-10 text-center sm:mb-16">
+          <span className="mb-3 block font-mono text-[10px] uppercase tracking-[0.3em] text-accent sm:mb-4 sm:text-xs">
             // By the numbers
           </span>
-          <h2 className="text-4xl font-black tracking-tight sm:text-5xl">
+          <h2 className="text-3xl font-black tracking-tight sm:text-5xl">
             Trusted at scale.
           </h2>
         </div>
 
         {/* Stats grid */}
-        <div ref={ref} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div ref={ref} className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {STATS.map((s, i) => (
             <motion.div
               key={s.label}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={inView ? { opacity: 1, scale: 1 } : {}}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="relative border border-border bg-card p-8 text-center"
+              className="relative border border-border bg-card p-5 text-center sm:p-8"
             >
-              <s.icon className="mx-auto mb-4 h-6 w-6 text-accent/40" />
-              <div className="mb-2 font-mono text-4xl font-black text-foreground sm:text-5xl">
+              <s.icon className="mx-auto mb-3 h-5 w-5 text-accent/40 sm:mb-4 sm:h-6 sm:w-6" />
+              <div className="mb-1 font-mono text-2xl font-black text-foreground sm:mb-2 sm:text-4xl lg:text-5xl">
                 <AnimatedCounter end={s.value} suffix={s.suffix} />
               </div>
-              <div className="font-mono text-xs uppercase tracking-widest text-muted">
+              <div className="font-mono text-[10px] uppercase tracking-widest text-muted sm:text-xs">
                 {s.label}
               </div>
             </motion.div>
@@ -699,42 +699,42 @@ function Stats() {
 /* ------------------------------------------------------------------ */
 function CTA() {
   return (
-    <section id="cta" className="relative border-t border-border bg-background px-6 py-16 sm:py-32">
+    <section id="cta" className="relative border-t border-border bg-background px-4 py-12 sm:px-6 sm:py-32">
       <GridBackground />
 
-      <div className="relative z-10 mx-auto max-w-3xl text-center">
-        <span className="mb-6 block font-mono text-xs uppercase tracking-[0.3em] text-accent">
+      <div className="relative z-10 mx-auto max-w-3xl px-0 text-center sm:px-4">
+        <span className="mb-4 block font-mono text-[10px] uppercase tracking-[0.3em] text-accent sm:mb-6 sm:text-xs">
           // Ready?
         </span>
 
-        <h2 className="mb-6 text-5xl font-black tracking-tight sm:text-7xl">
+        <h2 className="mb-4 text-4xl font-black leading-[1.1] tracking-tight sm:mb-6 sm:text-5xl lg:text-7xl">
           Start Building
           <br />
           <span className="text-accent">Now.</span>
         </h2>
 
-        <p className="mx-auto mb-10 max-w-xl text-lg text-muted">
+        <p className="mx-auto mb-8 max-w-full px-2 text-base leading-relaxed text-muted sm:mb-10 sm:max-w-xl sm:px-0 sm:text-lg">
           Join 10,000+ traders building strategies with visual tools.
           Free tier available. No credit card required.
         </p>
 
-        <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+        <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
           <a
             href="/builder"
-            className="group flex animate-glow items-center gap-3 border border-accent bg-accent px-10 py-5 font-mono text-sm font-bold uppercase tracking-widest text-background transition-all hover:bg-accent-dim"
+            className="group flex w-full max-w-xs items-center justify-center gap-3 border border-accent bg-accent px-8 py-4 font-mono text-xs font-bold uppercase tracking-widest text-background transition-all hover:bg-accent-dim sm:w-auto sm:px-10 sm:py-5 sm:text-sm"
           >
-            <Zap className="h-4 w-4" />
+            <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             Launch Studio
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1 sm:h-4 sm:w-4" />
           </a>
         </div>
 
         {/* Trust badges */}
-        <div className="mt-12 flex flex-wrap items-center justify-center gap-3 sm:gap-6">
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-2 sm:mt-12 sm:gap-6">
           {['No lock-in', 'Open source SDK', 'SOC 2 Type II', 'Self-custody'].map((badge) => (
             <span
               key={badge}
-              className="border border-border bg-card/50 px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-muted"
+              className="border border-border bg-card/50 px-3 py-1.5 font-mono text-[9px] uppercase tracking-widest text-muted sm:px-4 sm:py-2 sm:text-[10px]"
             >
               {badge}
             </span>
@@ -769,17 +769,17 @@ function Footer() {
   ];
 
   return (
-    <footer className="border-t border-border bg-card/30 px-6 py-16">
+    <footer className="border-t border-border bg-card/30 px-4 py-12 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-12 grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mb-10 grid gap-6 grid-cols-1 sm:grid-cols-2 sm:gap-8 lg:grid-cols-5 lg:mb-12">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <a href="#" className="mb-4 flex items-center gap-2 font-mono text-sm font-bold">
+            <a href="#" className="mb-3 flex items-center gap-2 font-mono text-sm font-bold sm:mb-4">
               <Terminal className="h-5 w-5 text-accent" />
               <span className="text-accent">ALGO</span>
               <span className="text-foreground/60">STUDIO</span>
             </a>
-            <p className="mt-3 text-xs leading-relaxed text-muted">
+            <p className="mt-2 text-[11px] leading-relaxed text-muted sm:mt-3 sm:text-xs">
               Visual algorithmic trading for the decentralized future.
             </p>
           </div>
@@ -787,15 +787,15 @@ function Footer() {
           {/* Link columns */}
           {columns.map((col) => (
             <div key={col.title}>
-              <h4 className="mb-4 font-mono text-xs font-bold uppercase tracking-widest text-foreground/60">
+              <h4 className="mb-3 font-mono text-[10px] font-bold uppercase tracking-widest text-foreground/60 sm:mb-4 sm:text-xs">
                 {col.title}
               </h4>
-              <ul className="flex flex-col gap-2">
+              <ul className="flex flex-col gap-1.5 sm:gap-2">
                 {col.links.map((link) => (
                   <li key={link}>
                     <a
                       href="#"
-                      className="text-xs text-muted transition-colors hover:text-accent"
+                      className="text-[11px] text-muted transition-colors hover:text-accent sm:text-xs"
                     >
                       {link}
                     </a>
@@ -807,8 +807,8 @@ function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="flex flex-col items-center justify-between gap-4 border-t border-border pt-8 sm:flex-row">
-          <span className="font-mono text-[10px] uppercase tracking-widest text-muted/50">
+        <div className="flex flex-col items-center justify-between gap-3 border-t border-border pt-6 sm:flex-row sm:gap-4 sm:pt-8">
+          <span className="font-mono text-[9px] uppercase tracking-widest text-muted/50 sm:text-[10px]">
             &copy; 2026 AlgoStudio. All rights reserved.
           </span>
           <div className="flex items-center gap-4">
@@ -817,7 +817,7 @@ function Footer() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
               </span>
-              <span className="font-mono text-[10px] uppercase tracking-widest text-muted/50">
+              <span className="font-mono text-[9px] uppercase tracking-widest text-muted/50 sm:text-[10px]">
                 All systems operational
               </span>
             </span>
