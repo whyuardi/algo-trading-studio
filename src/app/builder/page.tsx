@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState, useEffect, useMemo } from "react";
+import { runBacktest as strategyEngineBacktest, generateStrategyFromPrompt, StrategyConfig } from "@/lib/strategy-engine";
 import {
   ReactFlow,
   addEdge,
@@ -716,216 +717,77 @@ function computeBollinger(
 }
 
 function runBacktest(nodes: Node[], edges: Edge[]): BacktestResult {
-  const prices = generateOHLCV(365, 100);
-  const closes = prices.map((p) => p.close);
-
-  // Determine indicators from nodes
+  // Convert nodes to StrategyConfig
   const indicators = nodes.filter((n) => n.type === "indicator");
   const conditions = nodes.filter((n) => n.type === "condition");
   const actions = nodes.filter((n) => n.type === "action");
 
-  // Compute indicators
-  const rsiPeriod = parseInt(
-    (indicators.find((n) => n.data.indicator === "RSI")?.data.params as string) || "14"
-  );
-  const rsi = computeRSI(closes, rsiPeriod);
-  const sma50 = computeSMA(closes, 50);
-  const sma200 = computeSMA(closes, 200);
-  const { macd: macdLine, signal: macdSignal } = computeMACD(closes);
-  const { upper: bbUpper, lower: bbLower } = computeBollinger(closes, 20, 2);
+  const rsiNode = indicators.find((n) => n.data.indicator === "RSI");
+  const macdNode = indicators.find((n) => n.data.indicator === "MACD");
 
-  // Determine strategy parameters from nodes
-  let buyThreshold = 35;
-  let sellThreshold = 65;
-  let hasRSI = indicators.some((n) => n.data.indicator === "RSI");
-  let hasMACD = indicators.some((n) => n.data.indicator === "MACD");
-  let hasBB = indicators.some((n) => n.data.indicator === "Bollinger Bands");
-  let hasMA = indicators.some(
-    (n) => (n.data.indicator as string) === "Moving Average"
-  );
-  let hasStoch = indicators.some((n) => n.data.indicator === "Stochastic");
-
-  // Extract thresholds from condition nodes
-  conditions.forEach((c) => {
-    const val = c.data.value as number | undefined;
+  let buyThreshold = 30;
+  let sellThreshold = 70;
+  conditions.forEach((c: any) => {
+    const val = c.data.value;
     if (val !== undefined) {
-      if ((c.data.condition as string) === "<" && val < 50) buyThreshold = val;
-      if ((c.data.condition as string) === ">" && val > 50) sellThreshold = val;
+      if (c.data.condition === "<" && val < 50) buyThreshold = val;
+      if (c.data.condition === ">" && val > 50) sellThreshold = val;
     }
   });
 
-  // Has any action node?
-  let hasBuy = actions.some((a) => a.data.action === "BUY");
-  let hasSell = actions.some(
-    (a) => a.data.action === "SELL" || a.data.action === "STOP_LOSS"
-  );
+  const config: StrategyConfig = {
+    name: "Live Strategy",
+    chain: "ethereum",
+    symbol: "ETH",
+    indicators: ["RSI", "MACD"],
+    params: {
+      rsiPeriod: parseInt(rsiNode?.data.params as string) || 14,
+      rsiOversold: buyThreshold,
+      rsiOverbought: sellThreshold,
+      macdFast: 12,
+      macdSlow: 26,
+      macdSignal: 9,
+      stopLoss: 0.05,
+      takeProfit: 0.15,
+      positionSize: 1000,
+      maxPositions: 3,
+    },
+  };
 
-  // If no indicators, add default logic
-  if (!hasRSI && !hasMACD && !hasBB && !hasMA && !hasStoch) {
-    hasRSI = true;
+  const engineResult = strategyEngineBacktest(config);
+
+  // Convert engine result to page's BacktestResult format
+  const totalReturn = engineResult.totalReturn;
+  const equityCurve = engineResult.equityCurve.map((pt, i) => ({
+    label: `D${i * 4}`,
+    value: Math.round(pt.value * 100) / 100,
+  }));
+
+  const monthlyReturns: number[] = [];
+  const tradesPerMonth = Math.max(1, Math.floor(engineResult.trades.length / 12));
+  for (let m = 0; m < 12; m++) {
+    const start = m * tradesPerMonth;
+    const end = start + tradesPerMonth;
+    const monthTrades = engineResult.trades.slice(start, end);
+    const monthPnL = monthTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+    monthlyReturns.push(Math.round(monthPnL / 100));
   }
-  if (!hasBuy) hasBuy = true;
-  if (!hasSell) hasSell = true;
-
-  // Simulate
-  let cash = 10000;
-  let shares = 0;
-  let position = 0;
-  const equityCurve: { label: string; value: number }[] = [];
-  let wins = 0;
-  let losses = 0;
-  let totalProfit = 0;
-  let totalLoss = 0;
-  let entryPrice = 0;
-  const monthlyEquity: number[] = new Array(12).fill(0);
-  const monthLabels = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-  ];
-
-  for (let i = 0; i < closes.length; i++) {
-    const price = closes[i];
-    let buySignal = false;
-    let sellSignal = false;
-
-    if (hasRSI && rsi[i] !== null) {
-      if (rsi[i]! < buyThreshold) buySignal = true;
-      if (rsi[i]! > sellThreshold) sellSignal = true;
-    }
-
-    if (hasMACD && macdLine[i] !== null && macdSignal[i] !== null) {
-      if (i > 0 && macdLine[i - 1] !== null && macdSignal[i - 1] !== null) {
-        if (macdLine[i - 1]! < macdSignal[i - 1]! && macdLine[i]! >= macdSignal[i]!)
-          buySignal = true;
-        if (macdLine[i - 1]! >= macdSignal[i - 1]! && macdLine[i]! < macdSignal[i]!)
-          sellSignal = true;
-      }
-    }
-
-    if (hasBB && bbUpper[i] !== null && bbLower[i] !== null) {
-      if (price > bbUpper[i]!) buySignal = true;
-      if (price < bbLower[i]!) sellSignal = true;
-    }
-
-    if (hasMA && sma50[i] !== null && sma200[i] !== null) {
-      if (i > 0 && sma50[i - 1] !== null && sma200[i - 1] !== null) {
-        if (sma50[i - 1]! < sma200[i - 1]! && sma50[i]! >= sma200[i]!)
-          buySignal = true;
-        if (sma50[i - 1]! >= sma200[i - 1]! && sma50[i]! < sma200[i]!)
-          sellSignal = true;
-      }
-    }
-
-    if (hasStoch && i > 14) {
-      const slice = closes.slice(i - 14, i + 1);
-      const low14 = Math.min(...slice);
-      const high14 = Math.max(...slice);
-      if (high14 !== low14) {
-        const k = ((price - low14) / (high14 - low14)) * 100;
-        if (k < 20) buySignal = true;
-        if (k > 80) sellSignal = true;
-      }
-    }
-
-    // If no conditions found, use simple moving average crossover as fallback
-    if (!hasRSI && !hasMACD && !hasBB && !hasMA && !hasStoch && sma50[i] && sma200[i]) {
-      if (i > 0 && sma50[i - 1] !== null && sma200[i - 1] !== null) {
-        if (sma50[i - 1]! < sma200[i - 1]! && sma50[i]! >= sma200[i]!)
-          buySignal = true;
-        if (sma50[i - 1]! >= sma200[i - 1]! && sma50[i]! < sma200[i]!)
-          sellSignal = true;
-      }
-    }
-
-    if (buySignal && position === 0) {
-      const size = Math.floor((cash * 0.95) / price);
-      if (size > 0) {
-        shares = size;
-        cash -= shares * price;
-        entryPrice = price;
-        position = 1;
-      }
-    } else if (sellSignal && position === 1) {
-      cash += shares * price;
-      const pnl = (price - entryPrice) / entryPrice;
-      if (pnl > 0) {
-        wins++;
-        totalProfit += pnl;
-      } else {
-        losses++;
-        totalLoss += Math.abs(pnl);
-      }
-      shares = 0;
-      position = 0;
-    }
-
-    // Stop loss at -5%
-    if (position === 1 && price < entryPrice * 0.95) {
-      cash += shares * price;
-      const pnl = (price - entryPrice) / entryPrice;
-      losses++;
-      totalLoss += Math.abs(pnl);
-      shares = 0;
-      position = 0;
-    }
-
-    // Take profit at +15%
-    if (position === 1 && price > entryPrice * 1.15) {
-      cash += shares * price;
-      const pnl = (price - entryPrice) / entryPrice;
-      wins++;
-      totalProfit += pnl;
-      shares = 0;
-      position = 0;
-    }
-
-    const equity = cash + shares * price;
-    const day = Math.floor(i / 30);
-    if (day < 12) monthlyEquity[day] = equity;
-    if (i % 7 === 0 || i === closes.length - 1) {
-      equityCurve.push({
-        label: `D${i}`,
-        value: Math.round(equity * 100) / 100,
-      });
-    }
-  }
-
-  const finalEquity = cash + shares * closes[closes.length - 1];
-  const totalReturnPct = ((finalEquity - 10000) / 10000) * 100;
-
-  // Compute max drawdown
-  let peak = 0;
-  let maxDD = 0;
-  for (const pt of equityCurve) {
-    if (pt.value > peak) peak = pt.value;
-    const dd = ((peak - pt.value) / peak) * 100;
-    if (dd > maxDD) maxDD = dd;
-  }
-
-  const totalTrades = wins + losses;
-  const winRate = totalTrades > 0 ? (wins / totalTrades) * 100 : 0;
-  const avgTrade = totalTrades > 0 ? totalReturnPct / totalTrades : 0;
-  const profitFactor =
-    totalLoss > 0 ? totalProfit / totalLoss : totalProfit > 0 ? 99.99 : 0;
-  const sharpe =
-    totalReturnPct > 0 && maxDD > 0 ? (totalReturnPct / maxDD) * 1.2 : 0;
 
   return {
-    equityCurve,
-    totalReturn: `${totalReturnPct >= 0 ? "+" : ""}${totalReturnPct.toFixed(1)}%`,
-    sharpeRatio: sharpe.toFixed(2),
-    maxDrawdown: `-${maxDD.toFixed(1)}%`,
-    winRate: `${winRate.toFixed(1)}%`,
-    totalTrades,
-    profitFactor: profitFactor.toFixed(2),
-    avgTrade: `${avgTrade >= 0 ? "+" : ""}${avgTrade.toFixed(2)}%`,
-    monthlyReturns: monthlyEquity.map((v) => Math.round(((v - 10000) / 10000) * 100)),
+    equityCurve: equityCurve.length > 0 ? equityCurve : [{ label: "D0", value: 10000 }],
+    totalReturn: `${totalReturn >= 0 ? "+" : ""}${totalReturn.toFixed(1)}%`,
+    sharpeRatio: engineResult.sharpeRatio.toFixed(2),
+    maxDrawdown: `-${(engineResult.maxDrawdown * 100).toFixed(1)}%`,
+    winRate: `${(engineResult.winRate * 100).toFixed(1)}%`,
+    totalTrades: engineResult.trades.filter((t) => t.pnl !== undefined).length,
+    profitFactor:
+      engineResult.summary.profitFactor === Infinity
+        ? "∞"
+        : engineResult.summary.profitFactor.toFixed(2),
+    avgTrade: `${engineResult.totalReturn >= 0 ? "+" : ""}${(engineResult.totalReturn / Math.max(1, engineResult.trades.length)).toFixed(2)}%`,
+    monthlyReturns,
   };
 }
-
-// ──────────────────────────────────────────────
-// AI STRATEGY OPTIMIZER
-// ──────────────────────────────────────────────
 
 interface OptimizerSuggestion {
   type: "improve" | "warning" | "info";
