@@ -52,24 +52,34 @@ function AnimatedCounter({ end, suffix = '', prefix = '' }: { end: number; suffi
   useEffect(() => {
     if (!inView) return;
     const duration = 1800;
-    const steps = 60;
-    const increment = end / steps;
-    let current = 0;
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= end) {
-        setCount(end);
-        clearInterval(timer);
+    const startTime = performance.now();
+    let rafId: number;
+
+    function animate(currentTime: number) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out quad
+      const eased = progress * (2 - progress);
+      const currentVal = eased * end;
+
+      setCount(currentVal);
+
+      if (progress < 1) {
+        rafId = requestAnimationFrame(animate);
       } else {
-        setCount(Math.floor(current));
+        setCount(end);
       }
-    }, duration / steps);
-    return () => clearInterval(timer);
+    }
+
+    rafId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafId);
   }, [inView, end]);
+
+  const displayValue = Number.isInteger(end) ? Math.round(count).toLocaleString() : count.toFixed(1);
 
   return (
     <span ref={ref} className="tabular-nums">
-      {prefix}{count.toLocaleString()}{suffix}
+      {prefix}{displayValue}{suffix}
     </span>
   );
 }
@@ -211,7 +221,7 @@ function Hero() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.1 }}
-          className="mb-6 text-6xl font-black leading-[0.9] tracking-tighter sm:text-8xl md:text-9xl"
+          className="mb-6 text-4xl font-black leading-[0.9] tracking-tighter sm:text-6xl md:text-8xl lg:text-9xl"
         >
           <span className="block text-foreground">Build.</span>
           <span className="block text-foreground">Backtest.</span>
@@ -283,7 +293,7 @@ function Hero() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2, duration: 0.5 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2"
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 sm:bottom-8"
       >
         <motion.div
           animate={{ y: [0, 8, 0] }}
@@ -345,7 +355,7 @@ function Features() {
   const inView = useInView(ref, { once: true, margin: '-80px' });
 
   return (
-    <section id="features" className="relative border-t border-border bg-background px-6 py-24 sm:py-32">
+    <section id="features" className="relative border-t border-border bg-background px-6 py-16 sm:py-32">
       <div className="mx-auto max-w-7xl">
         {/* Section header */}
         <div className="mb-16 max-w-2xl">
@@ -360,7 +370,7 @@ function Features() {
         </div>
 
         {/* Features grid */}
-        <div ref={ref} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div ref={ref} className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f, i) => (
             <motion.div
               key={f.title}
@@ -427,7 +437,7 @@ function HowItWorks() {
   const inView = useInView(ref, { once: true, margin: '-80px' });
 
   return (
-    <section id="how-it-works" className="relative border-t border-border bg-card/30 px-6 py-24 sm:py-32">
+    <section id="how-it-works" className="relative border-t border-border bg-card/30 px-6 py-16 sm:py-32">
       <div className="mx-auto max-w-7xl">
         {/* Section header */}
         <div className="mb-16 max-w-2xl">
@@ -442,7 +452,7 @@ function HowItWorks() {
         </div>
 
         {/* Steps */}
-        <div ref={ref} className="grid gap-6 lg:grid-cols-3">
+        <div ref={ref} className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {STEPS.map((s, i) => (
             <motion.div
               key={s.num}
@@ -558,7 +568,7 @@ function LiveDemo() {
   } as const;
 
   return (
-    <section id="live-demo" className="relative border-t border-border bg-card/30 px-6 py-24 sm:py-32">
+    <section id="live-demo" className="relative border-t border-border bg-card/30 px-6 py-16 sm:py-32">
       <div className="mx-auto max-w-7xl">
         {/* Section header */}
         <div className="mb-16 text-center">
@@ -611,7 +621,7 @@ function LiveDemo() {
                 { label: 'Win Rate', value: '68.2%', positive: true },
                 { label: 'Max Drawdown', value: '-3.8%', positive: false },
               ].map((m) => (
-                <div key={m.label} className="border-border p-4 text-center sm:border-r last:border-r-0">
+                <div key={m.label} className="border-border p-3 text-center sm:p-4 sm:border-r last:border-r-0">
                   <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-muted">
                     {m.label}
                   </div>
@@ -647,7 +657,7 @@ function Stats() {
   const inView = useInView(ref, { once: true, margin: '-80px' });
 
   return (
-    <section id="stats" className="relative border-t border-border bg-background px-6 py-24 sm:py-32">
+    <section id="stats" className="relative border-t border-border bg-background px-6 py-16 sm:py-32">
       <div className="mx-auto max-w-7xl">
         {/* Section header */}
         <div className="mb-16 text-center">
@@ -689,7 +699,7 @@ function Stats() {
 /* ------------------------------------------------------------------ */
 function CTA() {
   return (
-    <section id="cta" className="relative border-t border-border bg-background px-6 py-24 sm:py-32">
+    <section id="cta" className="relative border-t border-border bg-background px-6 py-16 sm:py-32">
       <GridBackground />
 
       <div className="relative z-10 mx-auto max-w-3xl text-center">
@@ -710,7 +720,7 @@ function CTA() {
 
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <a
-            href="#"
+            href="/builder"
             className="group flex animate-glow items-center gap-3 border border-accent bg-accent px-10 py-5 font-mono text-sm font-bold uppercase tracking-widest text-background transition-all hover:bg-accent-dim"
           >
             <Zap className="h-4 w-4" />
@@ -720,7 +730,7 @@ function CTA() {
         </div>
 
         {/* Trust badges */}
-        <div className="mt-12 flex flex-wrap items-center justify-center gap-6">
+        <div className="mt-12 flex flex-wrap items-center justify-center gap-3 sm:gap-6">
           {['No lock-in', 'Open source SDK', 'SOC 2 Type II', 'Self-custody'].map((badge) => (
             <span
               key={badge}
@@ -761,7 +771,7 @@ function Footer() {
   return (
     <footer className="border-t border-border bg-card/30 px-6 py-16">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mb-12 grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
           {/* Brand */}
           <div className="lg:col-span-1">
             <a href="#" className="mb-4 flex items-center gap-2 font-mono text-sm font-bold">

@@ -1231,9 +1231,9 @@ export default function BuilderPage() {
   return (
     <div className="h-screen flex flex-col bg-[#0A0A0F]">
       {/* ─── LIVE PRICE TICKER BAR ─── */}
-      <div className="h-7 border-b border-[#1A1A24] bg-[#08080C] overflow-hidden shrink-0">
+      <div className="h-7 border-b border-[#1A1A24] bg-[#08080C] overflow-x-auto md:overflow-hidden shrink-0 scrollbar-hide">
         <div className="h-full flex items-center">
-          <div className="flex items-center gap-6 px-4 animate-[ticker_30s_linear_infinite] whitespace-nowrap">
+          <div className="flex items-center gap-6 px-4 animate-[ticker_30s_linear_infinite] whitespace-nowrap min-w-max">
             {[...tickerPrices, ...tickerPrices].map((t, i) => (
               <div key={`${t.symbol}-${i}`} className="flex items-center gap-1.5">
                 <span className="text-[0.55rem] font-mono font-bold text-[#E8E6E3]">
@@ -1259,8 +1259,8 @@ export default function BuilderPage() {
       </div>
 
       {/* ─── TOOLBAR ─── */}
-      <header className="h-12 border-b border-[#1A1A24] flex items-center justify-between px-4 bg-[#0A0A0F] shrink-0">
-        <div className="flex items-center gap-3">
+      <header className="h-12 border-b border-[#1A1A24] flex items-center justify-between px-2 sm:px-4 bg-[#0A0A0F] shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-3">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="md:hidden text-[#4A4845] hover:text-[#E8E6E3] transition-colors p-1"
@@ -1322,19 +1322,19 @@ export default function BuilderPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap justify-end max-w-full">
           {/* Share Button */}
           <button
             onClick={handleShare}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[0.65rem] font-mono uppercase tracking-wider text-[#FFD93D] border border-[#FFD93D]/30 hover:bg-[#FFD93D]/10 transition-all"
+            className="flex items-center gap-1 sm:gap-1.5 px-2 py-1 sm:px-3 sm:py-1.5 text-[0.6rem] sm:text-[0.65rem] font-mono uppercase tracking-wider text-[#FFD93D] border border-[#FFD93D]/30 hover:bg-[#FFD93D]/10 transition-all"
             title="Copy shareable link"
           >
-            <Share2 className="w-3 h-3" />
+            <Share2 className="w-3 h-3 shrink-0" />
             <span className="hidden lg:inline">Share</span>
           </button>
 
-          <button className="flex items-center gap-1.5 px-3 py-1.5 text-[0.65rem] font-mono uppercase tracking-wider text-[#4A4845] border border-[#1A1A24] hover:border-[#2A2A35] hover:text-[#E8E6E3] transition-all">
-            <Save className="w-3 h-3" />
+          <button className="flex items-center gap-1 sm:gap-1.5 px-2 py-1 sm:px-3 sm:py-1.5 text-[0.6rem] sm:text-[0.65rem] font-mono uppercase tracking-wider text-[#4A4845] border border-[#1A1A24] hover:border-[#2A2A35] hover:text-[#E8E6E3] transition-all">
+            <Save className="w-3 h-3 shrink-0" />
             <span className="hidden sm:inline">Save</span>
           </button>
 
@@ -1342,16 +1342,16 @@ export default function BuilderPage() {
           <button
             onClick={handleRunBacktest}
             disabled={running}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[0.65rem] font-mono uppercase tracking-wider text-[#0A0A0F] bg-[#00FFAA] hover:bg-[#00CC88] disabled:opacity-50 transition-all"
+            className="flex items-center gap-1 sm:gap-1.5 px-2 py-1 sm:px-3 sm:py-1.5 text-[0.6rem] sm:text-[0.65rem] font-mono uppercase tracking-wider text-[#0A0A0F] bg-[#00FFAA] hover:bg-[#00CC88] disabled:opacity-50 transition-all"
           >
             {running ? (
               <>
-                <div className="w-3 h-3 border-2 border-[#0A0A0F] border-t-transparent rounded-full animate-spin" />
+                <div className="w-3 h-3 border-2 border-[#0A0A0F] border-t-transparent rounded-full animate-spin shrink-0" />
                 <span className="hidden sm:inline">Running...</span>
               </>
             ) : (
               <>
-                <Play className="w-3 h-3" />
+                <Play className="w-3 h-3 shrink-0" />
                 <span className="hidden sm:inline">Backtest</span>
               </>
             )}
@@ -1367,9 +1367,9 @@ export default function BuilderPage() {
                 setShowOptimizer(!showOptimizer);
               }
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[0.65rem] font-mono uppercase tracking-wider text-[#6C5CE7] border border-[#6C5CE7]/40 hover:bg-[#6C5CE7]/10 transition-all"
+            className="flex items-center gap-1 sm:gap-1.5 px-2 py-1 sm:px-3 sm:py-1.5 text-[0.6rem] sm:text-[0.65rem] font-mono uppercase tracking-wider text-[#6C5CE7] border border-[#6C5CE7]/40 hover:bg-[#6C5CE7]/10 transition-all"
           >
-            <Sparkles className="w-3 h-3" />
+            <Sparkles className="w-3 h-3 shrink-0" />
             <span className="hidden sm:inline">AI Optimize</span>
           </button>
 
@@ -1377,15 +1377,15 @@ export default function BuilderPage() {
           <button
             onClick={handleDeploy}
             disabled={running}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[0.65rem] font-mono uppercase tracking-wider text-[#00FFAA] border border-[#00FFAA] hover:bg-[#00FFAA] hover:text-[#0A0A0F] disabled:opacity-50 transition-all"
+            className="flex items-center gap-1 sm:gap-1.5 px-2 py-1 sm:px-3 sm:py-1.5 text-[0.6rem] sm:text-[0.65rem] font-mono uppercase tracking-wider text-[#00FFAA] border border-[#00FFAA] hover:bg-[#00FFAA] hover:text-[#0A0A0F] disabled:opacity-50 transition-all"
           >
-            <Rocket className="w-3 h-3" />
+            <Rocket className="w-3 h-3 shrink-0" />
             <span className="hidden sm:inline">Deploy</span>
           </button>
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden relative">
+      <div className="flex flex-1 overflow-hidden relative min-w-0">
         {/* Mobile sidebar overlay */}
         {sidebarOpen && (
           <div
@@ -1399,7 +1399,7 @@ export default function BuilderPage() {
           className={`
           w-56 border-r border-[#1A1A24] overflow-y-auto bg-[#0A0A0F] shrink-0
           hidden md:block
-          ${sidebarOpen ? "!block fixed inset-y-[7rem] left-0 z-40" : ""}
+          ${sidebarOpen ? "!block fixed inset-y-[5rem] md:!inset-y-0 left-0 z-40" : ""}
         `}
         >
           <div className="p-3 border-b border-[#1A1A24]">
@@ -1476,7 +1476,7 @@ export default function BuilderPage() {
         </aside>
 
         {/* ─── CANVAS ─── */}
-        <div className="flex-1 relative" ref={reactFlowWrapper}>
+        <div className="flex-1 relative min-w-0 min-h-0" ref={reactFlowWrapper}>
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -1499,12 +1499,12 @@ export default function BuilderPage() {
               color="#1A1A24"
             />
             <Controls
-              className="!bg-[#111118] !border-[#1A1A24] !shadow-none [&>button]:!bg-[#111118] [&>button]:!border-[#1A1A24] [&>button]:!text-[#4A4845] [&>button:hover]:!bg-[#1A1A24] [&>button]:!w-7 [&>button]:!h-7"
+              className="!bg-[#111118] !border-[#1A1A24] !shadow-none [&>button]:!bg-[#111118] [&>button]:!border-[#1A1A24] [&>button]:!text-[#4A4845] [&>button:hover]:!bg-[#1A1A24] [&>button]:!w-6 [&>button]:!h-6 sm:[&>button]:!w-7 sm:[&>button]:!h-7"
             />
             <MiniMap
               nodeColor="#1A1A24"
               maskColor="rgba(10,10,15,0.8)"
-              className="!bg-[#111118] !border-[#1A1A24]"
+              className="!bg-[#111118] !border-[#1A1A24] hidden md:block"
             />
           </ReactFlow>
 
@@ -1516,7 +1516,7 @@ export default function BuilderPage() {
 
         {/* ─── BACKTEST PANEL ─── */}
         {showBacktest && backtestResult && (
-          <div className="w-full sm:w-80 lg:w-96 border-l border-[#1A1A24] bg-[#0A0A0F] overflow-y-auto shrink-0 animate-in slide-in-from-right fixed inset-y-[7rem] left-0 z-50 md:relative md:inset-auto">
+          <div className="w-full sm:w-80 lg:w-96 border-l border-[#1A1A24] bg-[#0A0A0F] overflow-y-auto shrink-0 animate-in slide-in-from-right fixed inset-y-[5rem] md:inset-y-0 left-0 z-50 md:relative md:inset-auto">
             <div className="p-4 border-b border-[#1A1A24] flex items-center justify-between">
               <h3 className="font-mono text-xs uppercase tracking-wider text-[#E8E6E3]">
                 Backtest Results
@@ -1626,7 +1626,7 @@ export default function BuilderPage() {
 
         {/* ─── AI OPTIMIZER PANEL ─── */}
         {showOptimizer && (
-          <div className="w-full sm:w-80 lg:w-96 border-l border-[#1A1A24] bg-[#0A0A0F] overflow-y-auto shrink-0 animate-in slide-in-from-right fixed inset-y-[7rem] left-0 z-50 md:relative md:inset-auto">
+          <div className="w-full sm:w-80 lg:w-96 border-l border-[#1A1A24] bg-[#0A0A0F] overflow-y-auto shrink-0 animate-in slide-in-from-right fixed inset-y-[5rem] md:inset-y-0 left-0 z-50 md:relative md:inset-auto">
             <div className="p-4 border-b border-[#1A1A24] flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Brain className="w-4 h-4 text-[#6C5CE7]" />
@@ -1715,7 +1715,7 @@ export default function BuilderPage() {
 
         {/* ─── DEPLOY PANEL ─── */}
         {showDeploy && (
-          <div className="w-full sm:w-80 border-l border-[#1A1A24] bg-[#0A0A0F] overflow-y-auto shrink-0 animate-in slide-in-from-right fixed inset-y-[7rem] left-0 z-50 md:relative md:inset-auto">
+          <div className="w-full sm:w-80 border-l border-[#1A1A24] bg-[#0A0A0F] overflow-y-auto shrink-0 animate-in slide-in-from-right fixed inset-y-[5rem] md:inset-y-0 left-0 z-50 md:relative md:inset-auto">
             <div className="p-4 border-b border-[#1A1A24] flex items-center justify-between">
               <h3 className="font-mono text-xs uppercase tracking-wider text-[#E8E6E3]">
                 Deploy Contract
